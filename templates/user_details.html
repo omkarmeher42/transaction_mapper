@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Details - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <!-- Left Side: Tabs -->
+    <div class="tabs">
+        <div class="tab" id="dashboard-tab" data-tab="dashboard">
+          <a href="/dashboard">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </div>
+        <div class="tab" id="map-transaction-tab" data-tab="map-transaction">
+          <a href="/map_transaction">
+            <i class="fas fa-map"></i>
+            <span>Map Transaction</span>
+          </a>
+        </div>
+        <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
+          <a href="/view_transactions">
+            <i class="fas fa-list"></i>
+            <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="download-tab" data-tab="download">
+          <a href="/download">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+          </a>
+        </div>
+      </div>
+
+    <!-- Right Side: Theme Toggle and User Icon -->
+    <div class="user-actions">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <input type="checkbox" id="theme-switch">
+        <label for="theme-switch" class="toggle-slider"></label>
+      </div>
+
+      <!-- User Icon -->
+      <div class="user-icon" onclick="window.location.href='{{ url_for('user.user_details') }}'">
+        <i class="fas fa-user"></i>
+      </div>
+
+      <!-- Logout Link -->
+      <a href="#" id="logoutLink" class="logout-link">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Flash Messages Container -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="map-transaction-form">
+      <h1>User Details</h1>
+      <form id="update-user-form">
+        <div class="form-group">
+          <label for="first_name">First Name</label>
+          <input type="text" id="first_name" name="first_name" value="{{ current_user.first_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="last_name">Last Name</label>
+          <input type="text" id="last_name" name="last_name" value="{{ current_user.last_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="user_name">Username</label>
+          <input type="text" id="user_name" name="user_name" value="{{ current_user.user_name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email_id">Email Address</label>
+          <input type="email" id="email_id" name="email_id" value="{{ current_user.email_id }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">New Password (leave blank to keep current)</label>
+          <input type="password" id="password" name="password">
+        </div>
+
+        <button type="submit" class="btn-primary">Update Details</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // Update user details
+    document.getElementById('update-user-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        user_name: document.getElementById('user_name').value,
+        email_id: document.getElementById('email_id').value,
+        password: document.getElementById('password').value || undefined
+      };
+
+      fetch(`/user/{{ current_user.id }}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          showFlashMessage(data.error, 'error');
+        } else {
+          showFlashMessage('Profile updated successfully', 'success');
+          // Update displayed username if changed
+          if (data.user_name !== formData.user_name) {
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        }
+      })
+      .catch(error => {
+        showFlashMessage('Error updating profile', 'error');
+      });
+    });
+
+    function showFlashMessage(message, category) {
+      const flashContainer = document.querySelector('.flash-messages');
+      const flashMessage = document.createElement('div');
+      flashMessage.className = `alert alert-${category}`;
+      flashMessage.textContent = message;
+      flashContainer.appendChild(flashMessage);
+      setTimeout(() => {
+        flashMessage.classList.add('fade-out');
+        setTimeout(() => flashMessage.remove(), 500);
+      }, 3000);
+    }
+
+    // JavaScript for theme toggle
+    const themeSwitch = document.getElementById('theme-switch');
+    themeSwitch.addEventListener('change', () => {
+      document.body.classList.toggle('light-theme');
+    });
+
+    // Function to set the active tab based on the current URL
+    function setActiveTab() {
+      const currentPath = window.location.pathname;
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+
+      switch (currentPath) {
+        case '/home':
+          document.getElementById('dashboard-tab').classList.add('active');
+          break;
+        case '/map_transaction':
+          document.getElementById('map-transaction-tab').classList.add('active');
+          break;
+        case '/view_transactions':
+          document.getElementById('view-transactions-tab').classList.add('active');
+          break;
+        case '/download':
+          document.getElementById('download-tab').classList.add('active');
+          break;
+        default:
+          document.getElementById('dashboard-tab').classList.add('active');
+      }
+    }
+
+    // Call the function when the page loads
+    document.addEventListener('DOMContentLoaded', setActiveTab);
+
+    // Call the function when navigating back/forward
+    window.addEventListener('popstate', setActiveTab);
+
+    // JavaScript for tab highlighting
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // JavaScript for logout
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+      event.preventDefault();
+      fetch('{{ url_for("logout") }}')
+        .then(() => {
+          window.location.href = '{{ url_for("home") }}';
+        });
+    });
+  </script>
+</body>
+</html>

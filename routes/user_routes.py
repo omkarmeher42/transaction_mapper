@@ -3,6 +3,7 @@ from services.user_services import UserService
 from models.users import db, User
 from forms import RegistrationForm, LoginForm
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash
 
 user_bp = Blueprint("user", __name__, url_prefix='/user')
 
@@ -68,7 +69,10 @@ def update_user(user_id):
         user.last_name = data.get("last_name", user.last_name)
         user.user_name = data.get("user_name", user.user_name)
         user.email_id = data.get("email_id", user.email_id)
-        user.password = data.get("password", user.password)
+        
+        # Only update password if one was provided and hash it
+        if data.get("password"):
+            user.password = generate_password_hash(data["password"])
         
         user.update()
         print('user updated')
@@ -99,6 +103,11 @@ def logout():
 def init_db():
     db.create_all()
     return "Database initialized!"
+
+@user_bp.route('/details')
+@login_required
+def user_details():
+    return render_template('user_details.html')
 
 user_routes = Blueprint('user_routes', __name__)
 

@@ -48,7 +48,7 @@
       </div>
 
       <!-- User Icon -->
-      <div class="user-icon">
+      <div class="user-icon" onclick="window.location.href='{{ url_for('user.user_details') }}'">
         <i class="fas fa-user"></i>
       </div>
 
@@ -245,25 +245,6 @@
     }
   </script>
   <style>
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: white;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-    .dropdown-menu a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-    .dropdown-menu a:hover {
-      background-color: #ddd;
-    }
-    .dropdown-menu.show {
-      display: block;
-    }
     .alert.fade-out {
       opacity: 0;
       transition: opacity 0.5s ease-out;
