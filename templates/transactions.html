@@ -48,7 +48,7 @@
       </div>
 
       <!-- User Icon -->
-      <div class="user-icon" onclick="window.location.href='{{ url_for('user.user_details') }}'">
+      <div class="user-icon" onclick="handleUserIconClick();">
         <i class="fas fa-user"></i>
       </div>
 
@@ -239,6 +239,10 @@
         window.location.href = '{{ url_for("home") }}';
       });
   });
+
+    function handleUserIconClick() {
+      window.location.href = '{{ url_for("user.user_details") }}';
+    }
   </script>
 </body>
 </html>

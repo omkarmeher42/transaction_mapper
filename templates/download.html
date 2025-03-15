@@ -48,7 +48,7 @@
       </div>
 
       <!-- User Icon -->
-      <div class="user-icon" onclick="window.location.href='{{ url_for('user.user_details') }}'">
+      <div class="user-icon" onclick="handleUserIconClick();">
         <i class="fas fa-user"></i>
       </div>
 
@@ -242,6 +242,10 @@
       flashMessage.textContent = message;
       flashContainer.appendChild(flashMessage);
       fadeOutFlashMessages();
+    }
+
+    function handleUserIconClick() {
+      window.location.href = '{{ url_for("user.user_details") }}';
     }
   </script>
   <style>
