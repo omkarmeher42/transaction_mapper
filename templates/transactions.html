@@ -102,6 +102,7 @@
               <option value="rent">Rent</option>
               <option value="donate">Donate</option>
               <option value="investments">Investments</option>
+              <option value="other">Other</option>
             </select>
         </div>
 
@@ -115,18 +116,13 @@
 
         <!-- Payment Method -->
         <div class="form-group">
-          
-          <div class="radio-group">
-            <label>Payment Method</label>
-            <label>
-              <input type="radio" name="payment_method" value="Cash" required>
-              <span>Cash</span>
-            </label>
-            <label>
-              <input type="radio" name="payment_method" value="UPI" required>
-              <span>UPI</span>
-            </label>
-          </div>
+          <label>Payment Method</label>
+          <select id="payment-method" name="payment_method" required>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Credit Card">Credit Card</option>
+          </select>
         </div>
 
         <!-- Submit Button -->
@@ -216,6 +212,7 @@
     "rent": ["House Rent", "Vehicle Rent", "NA"],
     "donate": ["Charity", "NGO", "Religious", "NA"],
     "investments": ["SIP", "Mutual Funds" ,"Gold", "Stocks", "Crypto", "Real Estate", "NA"],
+    "other": ["Other"],
   };
 
   const majorCategorySelect = document.getElementById("category");

@@ -156,7 +156,7 @@
         </thead>
         <tbody>
           {% for transaction in transactions %}
-          <tr>
+          <tr data-transaction-id="{{ transaction['transaction_id'] if 'transaction_id' in transaction else loop.index }}">
             <td>{{ transaction['title'] if 'title' in transaction else transaction.get('transaction title', '') }}</td>
             <td>{{ transaction['amount'] if 'amount' in transaction else transaction.get('transaction amount', '') }}</td>
             <td>{{ transaction['category'] if 'category' in transaction else transaction.get('transaction category', '') }}</td>
@@ -176,7 +176,8 @@
     <div id="editModal" class="edit-modal">
       <div class="map-transaction-form edit-form">
         <h1>Edit Transaction</h1>
-        <form id="editTransactionForm" method="POST">
+        <form id="editTransactionForm" method="POST" action="{{ url_for('transaction.update_transaction') }}">
+          <input type="hidden" id="edit-transaction-id" name="transaction_id">
           <div class="form-group">
             <label for="edit-title">Title</label>
             <input type="text" id="edit-title" name="title" required>
@@ -198,6 +199,7 @@
               <option value="rent">Rent</option>
               <option value="donate">Donate</option>
               <option value="investments">Investments</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div class="form-group">
@@ -378,17 +380,18 @@
 
     // Sub Category Mappings
     const subCategories = {
-        'bills': ['Electricity', 'Water', 'Internet', 'Phone', 'Gas', 'Other Bills'],
-        'food': ['Groceries', 'Restaurant', 'Food Delivery', 'Snacks', 'Other Food'],
-        'travel': ['Fuel', 'Public Transport', 'Cab/Auto', 'Flight', 'Train', 'Other Travel'],
-        'shopping': ['Clothes', 'Electronics', 'Home', 'Personal Care', 'Other Shopping'],
-        'entertainment': ['Movies', 'Games', 'Events', 'Subscriptions', 'Other Entertainment'],
-        'healthcare': ['Medicines', 'Consultation', 'Tests', 'Insurance', 'Other Healthcare'],
-        'lend': ['Family', 'Friends', 'Colleagues', 'Other Lend'],
-        'rent': ['House Rent', 'Office Rent', 'Storage Rent', 'Other Rent'],
-        'donate': ['Charity', 'Religious', 'Fundraiser', 'Other Donate'],
-        'investments': ['Stocks', 'Mutual Funds', 'Fixed Deposits', 'Crypto', 'Other Investments']
-    };
+    "bills": ["Electricity Bill", "Water Bill", "Gas Bill", "Mobile Recharge", "Wifi Bill", "NA"],
+    "food": ["Snacks","Groceries", "Restaurant", "Cafe", "Street Food", "NA"],
+    "travel": ["Public Transport", "Ride Hailing", "Flight/Train/Bus Tickets", "Fuel", "Toll/FastTag", "NA"],
+    "shopping": ["Clothing & Fashion", "Electronics", "Online Shopping", "NA"],
+    "entertainment": ["Movie/OTT Subscription", "Gaming", "Concerts & Events", "NA"],
+    "healthcare": ["Hospital Bills", "Pharmacy", "Health Insurance", "NA"],
+    "lend": ["Friend", "Parents", "Relatives", "NA"],
+    "rent": ["House Rent", "Vehicle Rent", "NA"],
+    "donate": ["Charity", "NGO", "Religious", "NA"],
+    "investments": ["SIP", "Mutual Funds" ,"Gold", "Stocks", "Crypto", "Real Estate", "NA"],
+    "other": ["Other"],
+  };
 
     // Update subcategories when category changes
     document.getElementById('edit-category').addEventListener('change', function() {
@@ -410,6 +413,11 @@
     editBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const row = this.closest('tr');
+            const transactionId = row.dataset.transactionId;
+            
+            // Populate form with row data
+            document.getElementById('edit-transaction-id').value = transactionId;
+            document.getElementById('edit-title').value = row.cells[0].textContent;
             const category = row.cells[2].textContent.toLowerCase();
             const subCategory = row.cells[3].textContent;
             
@@ -436,18 +444,20 @@
         editModal.classList.remove('active');
     }
 
-    // Close modal if clicking outside the form
+    // Remove click outside modal close functionality
     editModal.addEventListener('click', function(e) {
-      if (e.target === editModal) {
-        closeEditModal();
-      }
+        if (e.target === editModal) {
+            // Do nothing - modal can only be closed via cancel button
+            return;
+        }
     });
 
-    // Close modal on escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && editModal.classList.contains('active')) {
-        closeEditModal();
-      }
+    // Remove escape key close functionality
+    document.removeEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && editModal.classList.contains('active')) {
+            // Do nothing - modal can only be closed via cancel button
+            return;
+        }
     });
   </script>
 </body>

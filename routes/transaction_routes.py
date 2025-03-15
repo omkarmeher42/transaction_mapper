@@ -172,3 +172,37 @@ def handle_submit():
         return redirect(url_for('transaction.send_to_email', month=month, year=year))
     
     return "Invalid Action", 400
+
+@transaction_bp.route('/update_transaction', methods=['POST'])
+@login_required
+def update_transaction():
+    try:
+        transaction_data = {
+            'transaction_id': request.form.get('transaction_id'),
+            'title': request.form.get('title'),
+            'amount': request.form.get('amount'),
+            'category': request.form.get('category'),
+            'sub_category': request.form.get('sub_category'),
+            'payment_method': request.form.get('payment_method'),
+            'date': request.form.get('date')
+        }
+        
+        # Get current sheet from the date in transaction
+        date_obj = datetime.strptime(transaction_data['date'], '%Y-%m-%d')
+        month = date_obj.strftime('%B')
+        year = date_obj.strftime('%Y')
+        file_key = f"{month}_{year}"
+        file_path = current_user.all_sheets.get(file_key)
+        
+        if not file_path:
+            flash('Error: Sheet not found', 'error')
+            return redirect(url_for('transaction.view_transactions'))
+            
+        ExcelService.update_transaction_data(file_path, transaction_data)
+        flash('Transaction updated successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error updating transaction: {str(e)}")
+        flash('Error updating transaction', 'error')
+        
+    return redirect(url_for('transaction.view_transactions'))
