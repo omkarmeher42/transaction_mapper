@@ -945,3 +945,112 @@ body.light-theme .dropdown-menu a:hover {
 .form-row {
   gap: 15px; /* Reduced from 20px */
 }
+
+/* Modal Styles */
+.edit-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-modal.active {
+  display: flex;
+}
+
+.map-transaction-form.edit-form {
+  background: rgba(46, 41, 78, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.map-transaction-form.edit-form h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #bb86fc, #3700b3);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.map-transaction-form.edit-form .form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.map-transaction-form.edit-form label {
+  margin-bottom: 8px;
+  color: #a0a0a0;
+  font-weight: 600;
+  text-align: left;
+}
+
+.map-transaction-form.edit-form input,
+.map-transaction-form.edit-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.map-transaction-form.edit-form input:focus,
+.map-transaction-form.edit-form select:focus {
+  border-color: #bb86fc;
+  outline: none;
+  background-color: #1e1e2f;
+}
+
+.map-transaction-form.edit-form .form-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+.map-transaction-form.edit-form .btn-primary,
+.map-transaction-form.edit-form .btn-secondary {
+  width: 50%;
+  margin: 0; /* Reset any default margins */
+  padding: 12px 0;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-align: center;
+}
+
+.map-transaction-form.edit-form .btn-primary {
+  background: linear-gradient(90deg, #28a745, #218838);
+  color: #fff;
+}
+
+.map-transaction-form.edit-form .btn-secondary {
+  background: linear-gradient(90deg, #dc3545, #c82333);
+  color: #fff;
+}
+
+.map-transaction-form.edit-form .btn-primary:hover,
+.map-transaction-form.edit-form .btn-secondary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}

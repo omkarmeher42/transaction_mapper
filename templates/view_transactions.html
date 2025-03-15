@@ -172,6 +172,57 @@
         </tbody>
       </table>
     </div>
+
+    <div id="editModal" class="edit-modal">
+      <div class="map-transaction-form edit-form">
+        <h1>Edit Transaction</h1>
+        <form id="editTransactionForm" method="POST">
+          <div class="form-group">
+            <label for="edit-title">Title</label>
+            <input type="text" id="edit-title" name="title" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-amount">Amount</label>
+            <input type="number" id="edit-amount" name="amount" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-category">Category</label>
+            <select id="edit-category" name="category" required>
+              <option value="bills">Bills</option>
+              <option value="food">Food & Dining</option>
+              <option value="travel">Travel & Transport</option>
+              <option value="shopping">Shopping</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="lend">Lend</option>
+              <option value="rent">Rent</option>
+              <option value="donate">Donate</option>
+              <option value="investments">Investments</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-sub-category">Sub Category</label>
+            <select id="edit-sub-category" name="sub_category" required>
+              <option value="" disabled selected>Select Sub Category</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-payment-method">Payment Method</label>
+            <select id="edit-payment-method" name="payment_method" required>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="debit_card">Debit Card</option>
+              <option value="credit_card">Credit Card</option>
+            </select>
+          </div>
+          <input type="hidden" id="edit-date" name="date">
+          <div class="form-buttons">
+            <button type="submit" class="btn-primary">Update</button>
+            <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -320,27 +371,84 @@
         }, 3000);
       });
     });
+
+    // Edit modal elements
+    const editModal = document.getElementById('editModal');
+    const editBtns = document.querySelectorAll('.edit-btn');
+
+    // Sub Category Mappings
+    const subCategories = {
+        'bills': ['Electricity', 'Water', 'Internet', 'Phone', 'Gas', 'Other Bills'],
+        'food': ['Groceries', 'Restaurant', 'Food Delivery', 'Snacks', 'Other Food'],
+        'travel': ['Fuel', 'Public Transport', 'Cab/Auto', 'Flight', 'Train', 'Other Travel'],
+        'shopping': ['Clothes', 'Electronics', 'Home', 'Personal Care', 'Other Shopping'],
+        'entertainment': ['Movies', 'Games', 'Events', 'Subscriptions', 'Other Entertainment'],
+        'healthcare': ['Medicines', 'Consultation', 'Tests', 'Insurance', 'Other Healthcare'],
+        'lend': ['Family', 'Friends', 'Colleagues', 'Other Lend'],
+        'rent': ['House Rent', 'Office Rent', 'Storage Rent', 'Other Rent'],
+        'donate': ['Charity', 'Religious', 'Fundraiser', 'Other Donate'],
+        'investments': ['Stocks', 'Mutual Funds', 'Fixed Deposits', 'Crypto', 'Other Investments']
+    };
+
+    // Update subcategories when category changes
+    document.getElementById('edit-category').addEventListener('change', function() {
+        const subCategorySelect = document.getElementById('edit-sub-category');
+        const selectedCategory = this.value;
+        subCategorySelect.innerHTML = '<option value="" disabled>Select Sub Category</option>';
+        
+        if (subCategories[selectedCategory]) {
+            subCategories[selectedCategory].forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub;
+                option.textContent = sub;
+                subCategorySelect.appendChild(option);
+            });
+        }
+    });
+
+    // Edit modal functionality
+    editBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const category = row.cells[2].textContent.toLowerCase();
+            const subCategory = row.cells[3].textContent;
+            
+            // Populate form with row data
+            document.getElementById('edit-title').value = row.cells[0].textContent;
+            document.getElementById('edit-amount').value = row.cells[1].textContent;
+            document.getElementById('edit-category').value = category;
+            
+            // Trigger category change to load subcategories
+            const categoryEvent = new Event('change');
+            document.getElementById('edit-category').dispatchEvent(categoryEvent);
+            
+            // Set the subcategory after loading options
+            document.getElementById('edit-sub-category').value = subCategory;
+            document.getElementById('edit-payment-method').value = row.cells[4].textContent.toLowerCase().replace(' ', '_');
+            document.getElementById('edit-date').value = row.cells[5].textContent;
+            
+            // Show modal
+            editModal.classList.add('active');
+        });
+    });
+
+    function closeEditModal() {
+        editModal.classList.remove('active');
+    }
+
+    // Close modal if clicking outside the form
+    editModal.addEventListener('click', function(e) {
+      if (e.target === editModal) {
+        closeEditModal();
+      }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && editModal.classList.contains('active')) {
+        closeEditModal();
+      }
+    });
   </script>
-  <style>
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: white;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-      z-index: 1;
-    }
-    .dropdown-menu a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-    .dropdown-menu a:hover {
-      background-color: #ddd;
-    }
-    .dropdown-menu.show {
-      display: block;
-    }
-  </style>
 </body>
 </html>
