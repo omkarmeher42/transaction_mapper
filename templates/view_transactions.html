@@ -108,6 +108,7 @@
             <select id="sort-by">
               <option value="" >Select Sort</option>
               <option value="date">Date</option>
+              <option value="latest">Latest Added</option>
               <option value="amount_ascending">Amount (Low to High)</option>
               <option value="amount_descending">Amount (High to Low)</option>
             </select>
@@ -234,28 +235,34 @@
     }
 
     function sortTransactions(sortBy) {
+      if (!sortBy) return; // Don't sort if no option selected
+      
+      const tbody = document.querySelector('.transactions-table tbody');
       const rows = Array.from(document.querySelectorAll('.transactions-table tbody tr'));
       
-      rows.sort((a, b) => {
-          let aValue, bValue;
-          
-          if (sortBy === 'date') {
-              // Parse dates for comparison
-              aValue = new Date(a.querySelector('td:nth-child(6)').textContent);
-              bValue = new Date(b.querySelector('td:nth-child(6)').textContent);
-              return aValue - bValue;
-          } else if (sortBy.startsWith('amount')) {
-              // Parse amounts and remove any currency symbols
-              aValue = parseFloat(a.querySelector('td:nth-child(2)').textContent.replace(/[^0-9.-]+/g, ''));
-              bValue = parseFloat(b.querySelector('td:nth-child(2)').textContent.replace(/[^0-9.-]+/g, ''));
+      if (sortBy === 'latest') {
+          // For latest added, simply reverse the current order
+          tbody.innerHTML = '';
+          rows.reverse().forEach(row => tbody.appendChild(row));
+      } else if (sortBy === 'date') {
+          // Sort by date
+          rows.sort((a, b) => {
+              const aDate = new Date(a.querySelector('td:nth-child(6)').textContent);
+              const bDate = new Date(b.querySelector('td:nth-child(6)').textContent);
+              return aDate - bDate;
+          });
+          tbody.innerHTML = '';
+          rows.forEach(row => tbody.appendChild(row));
+      } else if (sortBy.startsWith('amount')) {
+          // Sort by amount
+          rows.sort((a, b) => {
+              const aValue = parseFloat(a.querySelector('td:nth-child(2)').textContent.replace(/[^0-9.-]+/g, ''));
+              const bValue = parseFloat(b.querySelector('td:nth-child(2)').textContent.replace(/[^0-9.-]+/g, ''));
               return sortBy === 'amount_ascending' ? aValue - bValue : bValue - aValue;
-          }
-          return 0;
-      });
-
-      const tbody = document.querySelector('.transactions-table tbody');
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
+          });
+          tbody.innerHTML = '';
+          rows.forEach(row => tbody.appendChild(row));
+      }
 
       // Store the current sort selection
       localStorage.setItem('selectedSort', sortBy);
