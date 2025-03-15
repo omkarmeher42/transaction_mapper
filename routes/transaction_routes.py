@@ -206,3 +206,30 @@ def update_transaction():
         flash('Error updating transaction', 'error')
         
     return redirect(url_for('transaction.view_transactions'))
+
+@transaction_bp.route('/delete_transaction', methods=['POST'])
+@login_required
+def delete_transaction():
+    try:
+        transaction_id = request.form.get('transaction_id')
+        date = request.form.get('date')
+        
+        # Get current sheet from the date
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        month = date_obj.strftime('%B')
+        year = date_obj.strftime('%Y')
+        file_key = f"{month}_{year}"
+        file_path = current_user.all_sheets.get(file_key)
+        
+        if not file_path:
+            flash('Error: Sheet not found', 'error')
+            return redirect(url_for('transaction.view_transactions'))
+            
+        ExcelService.delete_transaction_data(file_path, transaction_id)
+        flash('Transaction deleted successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error deleting transaction: {str(e)}")
+        flash('Error deleting transaction', 'error')
+        
+    return redirect(url_for('transaction.view_transactions'))

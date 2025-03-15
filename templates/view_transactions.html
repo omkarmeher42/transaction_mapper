@@ -459,6 +459,39 @@
             return;
         }
     });
+
+    // Delete functionality
+    const deleteBtns = document.querySelectorAll('.delete-btn');
+    
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                const row = this.closest('tr');
+                const transactionId = row.dataset.transactionId;
+                const date = row.cells[5].textContent;  // Get date from the row
+                
+                // Create and submit form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("transaction.delete_transaction") }}';
+                
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'transaction_id';
+                idInput.value = transactionId;
+                
+                const dateInput = document.createElement('input');
+                dateInput.type = 'hidden';
+                dateInput.name = 'date';
+                dateInput.value = date;
+                
+                form.appendChild(idInput);
+                form.appendChild(dateInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
   </script>
 </body>
 </html>

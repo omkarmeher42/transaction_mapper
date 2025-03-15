@@ -138,3 +138,31 @@ class ExcelService:
         # Save the workbook
         workbook.save(file_path)
 
+    @staticmethod
+    def delete_transaction_data(file_path, transaction_id):
+        # Load the workbook and select the active sheet
+        workbook = openpyxl.load_workbook(file_path)
+        sheet = workbook.active
+        
+        # Find row by transaction_id (Sr No)
+        row_num = None
+        for row in range(4, sheet.max_row + 1):  # Start from row 4 (data starts after header)
+            if str(sheet.cell(row=row, column=1).value) == str(transaction_id):
+                row_num = row
+                break
+        
+        if row_num is None:
+            raise ValueError("Transaction not found")
+        
+        # Delete the row
+        sheet.delete_rows(row_num)
+        
+        # Update the sum formula
+        max_row = sheet.max_row
+        headings = 7
+        amount_column = 'D'  # Assuming "Amount" is in column D
+        sheet.cell(row=3, column=headings + 1, value=f"=SUM({amount_column}4:{amount_column}{max_row})").alignment = Alignment(horizontal='center', vertical='center')
+        
+        # Save the workbook
+        workbook.save(file_path)
+
