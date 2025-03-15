@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Transactions - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <!-- Left Side: Tabs -->
+    <div class="tabs">
+      <div class="tab" id="dashboard-tab" data-tab="dashboard">
+        <a href="/dashboard">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+      <div class="tab" id="map-transaction-tab" data-tab="map-transaction">
+        <a href="/map_transaction">
+          <i class="fas fa-map"></i>
+          <span>Map Transaction</span>
+        </a>
+      </div>
+      <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
+        <a href="/view_transactions">
+          <i class="fas fa-list"></i>
+          <span>View Transactions</span>
+        </a>
+      </div>
+      <div class="tab active" id="download-tab" data-tab="download">
+        <a href="/download">
+          <i class="fas fa-download"></i>
+          <span>Download</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Side: Theme Toggle and User Icon -->
+    <div class="user-actions">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <input type="checkbox" id="theme-switch">
+        <label for="theme-switch" class="toggle-slider"></label>
+      </div>
+
+      <!-- User Icon -->
+      <div class="user-icon">
+        <i class="fas fa-user"></i>
+      </div>
+
+      <!-- Logout Link -->
+      <a href="#" id="logoutLink" class="logout-link">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="download-form">
+      <h1>Download Transactions</h1>
+      <form id="download-form">
+        <!-- CSRF Token -->
+        <!-- Month Input -->
+        <div class="form-group">
+          <label for="month">Month</label>
+          <select id="month" name="month" required>
+            <option value="" disabled selected>Select Month</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+        </div>
+
+        <!-- Year Input -->
+        <div class="form-group">
+          <label for="year">Year</label>
+          <select id="year" name="year" required>
+            <option value="" disabled selected>Select Year</option>
+            <option value="2025">2025</option>
+          </select>
+        </div>
+
+        <!-- Hidden User ID Input -->
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+
+        <!-- Buttons -->
+        <div class="form-buttons">
+          <button type="button" class="btn-email" onclick="submitForm('send_to_email')">
+            <i class="fas fa-envelope"></i>
+            <span>Email</span>
+          </button>
+          <button type="button" class="btn-download" onclick="submitForm('download')">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // JavaScript for theme toggle
+    const themeSwitch = document.getElementById('theme-switch');
+    themeSwitch.addEventListener('change', () => {
+      document.body.classList.toggle('light-theme');
+    });
+
+    // Function to set the active tab based on the current URL
+    function setActiveTab() {
+      const currentPath = window.location.pathname; // Get the current URL path
+      const tabs = document.querySelectorAll('.tab'); // Get all tabs
+
+      // Remove the 'active' class from all tabs
+      tabs.forEach(tab => tab.classList.remove('active'));
+
+      // Determine which tab should be active based on the current URL
+      switch (currentPath) {
+        case '/dashboard':
+          document.getElementById('dashboard-tab').classList.add('active');
+          break;
+        case '/map_transaction':
+          document.getElementById('map-transaction-tab').classList.add('active');
+          break;
+        case '/view_transactions':
+          document.getElementById('view-transactions-tab').classList.add('active');
+          break;
+        case '/download':
+          document.getElementById('download-tab').classList.add('active');
+          break;
+        default:
+          // Default to Dashboard if no match is found
+          document.getElementById('dashboard-tab').classList.add('active');
+      }
+    }
+
+    // Call the function when the page loads
+    document.addEventListener('DOMContentLoaded', setActiveTab);
+
+    // Call the function when navigating back/forward
+    window.addEventListener('popstate', setActiveTab);
+
+    // JavaScript for user icon logout
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+      event.preventDefault();
+      fetch('{{ url_for("logout") }}')
+        .then(() => {
+          window.location.href = '{{ url_for("home") }}';
+        });
+    });
+
+    // JavaScript for fading out flash messages
+    function fadeOutFlashMessages() {
+      const flashMessages = document.querySelectorAll('.alert');
+      flashMessages.forEach(message => {
+        setTimeout(() => {
+          message.classList.add('fade-out');
+        }, 3000); // Start fading out after 3 seconds
+        setTimeout(() => {
+          message.remove(); // Remove the message from the DOM after fading out
+        }, 3500); // Remove after 3.5 seconds
+      });
+    }
+
+    // Call the function when the page loads
+    document.addEventListener('DOMContentLoaded', fadeOutFlashMessages);
+
+    // Function to submit the form and handle the response
+    function submitForm(action) {
+      const form = document.getElementById('download-form');
+      const formData = new FormData(form);
+      formData.append('action', action);
+
+      fetch('{{ url_for("transaction.download") }}', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (response.ok) {
+          if (action === 'download') {
+            return response.blob().then(blob => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = url;
+              a.download = 'transactions.xlsx'; // Adjust the filename as needed
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              showFlashMessage('File downloaded successfully', 'success');
+            });
+          } else {
+            showFlashMessage('File sent to email', 'success');
+          }
+        } else {
+          return response.text().then(text => {
+            showFlashMessage(text, 'error');
+          });
+        }
+      })
+      .catch(error => {
+        showFlashMessage('An error occurred', 'error');
+      });
+    }
+
+    // Function to show flash message
+    function showFlashMessage(message, category) {
+      const flashContainer = document.querySelector('.flash-messages');
+      const flashMessage = document.createElement('div');
+      flashMessage.className = `alert alert-${category}`;
+      flashMessage.textContent = message;
+      flashContainer.appendChild(flashMessage);
+      fadeOutFlashMessages();
+    }
+  </script>
+  <style>
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+    .dropdown-menu a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .dropdown-menu a:hover {
+      background-color: #ddd;
+    }
+    .dropdown-menu.show {
+      display: block;
+    }
+    .alert.fade-out {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+    }
+  </style>
+</body>
+</html>

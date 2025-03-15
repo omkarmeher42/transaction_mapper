@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="registration-container">
+    <!-- Navbar and User Icon -->
+    <div class="header">
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="registration-container">
+      <!-- Translucent Rectangle -->
+      <div class="registration-box">
+        <!-- Left Side: Abstract Image -->
+        <div class="image-section">
+          <img src="{{ url_for('static', filename='abstract_image_1.jpg') }}" alt="Abstract Image">
+        </div>
+
+        <!-- Right Side: Registration Form -->
+        <div class="form-section">
+          <h1>Create Your Account</h1>
+          <form method="POST" action="{{ url_for('user_routes.register') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+              <label for="first_name">{{ form.first_name.label }}</label>
+              {{ form.first_name(size=32, class="form-input", placeholder="Enter your first name") }}
+            </div>
+            <div class="form-group">
+              <label for="last_name">{{ form.last_name.label }}</label>
+              {{ form.last_name(size=32, class="form-input", placeholder="Enter your last name") }}
+            </div>
+            <div class="form-group">
+              <label for="user_name">{{ form.user_name.label }}</label>
+              {{ form.user_name(size=32, class="form-input", placeholder="Enter your username") }}
+            </div>
+            <div class="form-group">
+              <label for="email_id">{{ form.email_id.label }}</label>
+              {{ form.email_id(size=32, class="form-input", placeholder="Enter your email") }}
+            </div>
+            <div class="form-group">
+              <label for="password">{{ form.password.label }}</label>
+              {{ form.password(size=32, class="form-input", placeholder="Enter your password") }}
+            </div>
+            <div class="form-group">
+              <label for="confirm_password">{{ form.confirm_password.label }}</label>
+              {{ form.confirm_password(size=32, class="form-input", placeholder="Confirm your password") }}
+            </div>
+            <button type="submit" class="btn-register">Sign Up</button>
+          </form>
+          <p>Already have an account? <a href="/user/login">Login here</a>.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Transactions - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <!-- Left Side: Tabs -->
+    <div class="tabs">
+        <div class="tab" id="dashboard-tab" data-tab="dashboard">
+          <a href="/dashboard">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </div>
+        <div class="tab" id="map-transaction-tab" data-tab="map-transaction">
+          <a href="/map_transaction">
+            <i class="fas fa-map"></i>
+            <span>Map Transaction</span>
+          </a>
+        </div>
+        <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
+          <a href="/view_transactions">
+            <i class="fas fa-list"></i>
+            <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="download-tab" data-tab="download">
+          <a href="/download">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+          </a>
+        </div>
+      </div>
+
+    <!-- Right Side: Theme Toggle and User Icon -->
+    <div class="user-actions">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <input type="checkbox" id="theme-switch">
+        <label for="theme-switch" class="toggle-slider"></label>
+      </div>
+
+      <!-- User Icon -->
+      <div class="user-icon">
+        <i class="fas fa-user"></i>
+      </div>
+
+      <!-- Logout Link -->
+      <a href="#" id="logoutLink" class="logout-link">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="map-transaction-form">
+      <h1>Map a New Transaction</h1>
+      <form id="transaction-form" method="POST" action="{{ action }}">
+        <!-- Transaction Title -->
+        <div class="form-group">
+          <label for="title">Transaction Title</label>
+          <input type="text" id="title" name="title" placeholder="e.g., Bus Fare" required>
+        </div>
+
+        <!-- Amount -->
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" name="amount" placeholder="e.g., 50" required>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="" disabled selected>Select a major category</option>
+              <option value="bills">Bills</option>
+              <option value="food">Food & Dining</option>
+              <option value="travel">Travel & Transport</option>
+              <option value="shopping">Shopping</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="lend">Lend</option>
+              <option value="rent">Rent</option>
+              <option value="donate">Donate</option>
+              <option value="investments">Investments</option>
+            </select>
+        </div>
+
+        <!-- Sub-Category -->
+        <div class="form-group">
+            <label for="sub_category">Sub-Category</label>
+            <select id="sub_category" name="sub_category" required>
+              <option value="" disabled selected>Select a sub-category</option>
+            </select>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="form-group">
+          
+          <div class="radio-group">
+            <label>Payment Method</label>
+            <label>
+              <input type="radio" name="payment_method" value="Cash" required>
+              <span>Cash</span>
+            </label>
+            <label>
+              <input type="radio" name="payment_method" value="UPI" required>
+              <span>UPI</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-primary">Map Transaction</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    // JavaScript for theme toggle
+    const themeSwitch = document.getElementById('theme-switch');
+    themeSwitch.addEventListener('change', () => {
+      document.body.classList.toggle('light-theme');
+    });
+
+    function fadeOutFlashMessages() {
+    const flashMessages = document.querySelectorAll('.alert');
+    flashMessages.forEach(message => {
+      setTimeout(() => {
+        message.classList.add('fade-out');
+      }, 3000); // Start fading out after 3 seconds
+      setTimeout(() => {
+        message.remove(); // Remove the message from the DOM after fading out
+      }, 3500); // Remove after 3.5 seconds
+    });
+  }
+
+  // Call the function when the page loads
+  document.addEventListener('DOMContentLoaded', fadeOutFlashMessages);
+
+  // Call the function when the page loads
+  document.addEventListener('DOMContentLoaded', fadeOutFlashMessages);
+
+    // Function to set the active tab based on the current URL
+  function setActiveTab() {
+    const currentPath = window.location.pathname; // Get the current URL path
+    const tabs = document.querySelectorAll('.tab'); // Get all tabs
+
+    // Remove the 'active' class from all tabs
+    tabs.forEach(tab => tab.classList.remove('active'));
+
+    // Determine which tab should be active based on the current URL
+    switch (currentPath) {
+      case '/home':
+        document.getElementById('dashboard-tab').classList.add('active');
+        break;
+      case '/map_transaction':
+        document.getElementById('map-transaction-tab').classList.add('active');
+        break;
+      case '/view_transactions':
+        document.getElementById('view-transactions-tab').classList.add('active');
+        break;
+      case '/download':
+        document.getElementById('download-tab').classList.add('active');
+        break;
+      default:
+        // Default to Dashboard if no match is found
+        document.getElementById('dashboard-tab').classList.add('active');
+    }
+  }
+
+  
+
+  // Call the function when the page loads
+  document.addEventListener('DOMContentLoaded', setActiveTab);
+
+  // Call the function when navigating back/forward
+  window.addEventListener('popstate', setActiveTab);
+
+    // JavaScript for tab highlighting
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    const subCategories = {
+    "bills": ["Electricity Bill", "Water Bill", "Gas Bill", "Mobile Recharge", "Wifi Bill", "NA"],
+    "food": ["Snacks","Groceries", "Restaurant", "Cafe", "Street Food", "NA"],
+    "travel": ["Public Transport", "Ride Hailing", "Flight/Train/Bus Tickets", "Fuel", "Toll/FastTag", "NA"],
+    "shopping": ["Clothing & Fashion", "Electronics", "Online Shopping", "NA"],
+    "entertainment": ["Movie/OTT Subscription", "Gaming", "Concerts & Events", "NA"],
+    "healthcare": ["Hospital Bills", "Pharmacy", "Health Insurance", "NA"],
+    "lend": ["Friend", "Parents", "Relatives", "NA"],
+    "rent": ["House Rent", "Vehicle Rent", "NA"],
+    "donate": ["Charity", "NGO", "Religious", "NA"],
+    "investments": ["SIP", "Mutual Funds" ,"Gold", "Stocks", "Crypto", "Real Estate", "NA"],
+  };
+
+  const majorCategorySelect = document.getElementById("category");
+  const subCategorySelect = document.getElementById("sub_category");
+
+  majorCategorySelect.addEventListener("change", function() {
+    const selectedMajorCategory = this.value;
+    subCategorySelect.innerHTML = '<option value="" disabled selected>Select a sub-category</option>';
+
+    if (selectedMajorCategory in subCategories) {
+      subCategories[selectedMajorCategory].forEach(subCat => {
+        const option = document.createElement("option");
+        option.value = subCat.toLowerCase().replace(/ /g, "-");
+        option.textContent = subCat;
+        subCategorySelect.appendChild(option);
+      });
+    }
+  });
+
+  document.getElementById('logoutLink').addEventListener('click', function(event) {
+    event.preventDefault();
+    fetch('{{ url_for("logout") }}')
+      .then(() => {
+        window.location.href = '{{ url_for("home") }}';
+      });
+  });
+  </script>
+  <style>
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+    .dropdown-menu a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .dropdown-menu a:hover {
+      background-color: #ddd;
+    }
+    .dropdown-menu.show {
+      display: block;
+    }
+  </style>
+</body>
+</html>

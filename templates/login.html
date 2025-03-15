@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Navbar and User Icon -->
+    <div class="header">
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="registration-container">
+      <!-- Translucent Rectangle -->
+      <div class="registration-box">
+        <!-- Left Side: Abstract Image -->
+        <div class="image-section">
+          <img src="{{ url_for('static', filename='abstract_image_1.jpg') }}" alt="Abstract Image">
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="form-section">
+          <h1>Login to Your Account</h1>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flashes">
+                {% for category, message in messages %}
+                  <p class="flash-message {{ category }}">{{ message }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+          <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn-login">Login</button>
+          </form>
+          <p>Don't have an account? <a href="/register">Register here</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

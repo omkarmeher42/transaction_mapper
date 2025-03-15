@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .user-icon a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .user-icon a.flash-red {
+      animation: flashRed 0.5s;
+    }
+    .user-icon a.flash-green {
+      animation: flashGreen 0.5s;
+    }
+    @keyframes flashRed {
+      0% { background-color: red; }
+      100% { background-color: inherit; }
+    }
+    @keyframes flashGreen {
+      0% { background-color: green; }
+      100% { background-color: inherit; }
+    }
+    .user-icon a.hover-green:hover {
+      color: green;
+    }
+    .user-icon a.hover-red:hover {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Navbar and User Icon -->
+    <div class="header">
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/dashboard">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="user-icon">
+        <a href="/dashboard" id="userIcon">
+          <i class="fas fa-user"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <main>
+      <section class="hero">
+        <h1>Track Your Daily Payments Effortlessly</h1>
+        <p>Stay on top of your finances with our easy-to-use transaction tracker. Manage your expenses, analyze your spending, and achieve your financial goals.</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('user_routes.register') }}" class="btn-primary">Get Started</a>
+            <a href="{{ url_for('user_routes.login') }}" class="btn-secondary">Login</a>
+          </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2025 Transaction Tracker. All rights reserved.</p>
+    </footer>
+  </div>
+  <script>
+    document.getElementById('userIcon').addEventListener('click', function(event) {
+      event.preventDefault();
+      fetch('{{ url_for("login_status") }}')
+        .then(response => response.json())
+        .then(data => {
+          if (data.logged_in) {
+            window.location.href = '/dashboard';
+          } else {
+            window.location.href = '{{ url_for("user_routes.login") }}';
+          }
+        });
+    });
+
+    fetch('{{ url_for("login_status") }}')
+      .then(response => response.json())
+      .then(data => {
+        const userIcon = document.getElementById('userIcon');
+        if (data.logged_in) {
+          userIcon.classList.add('hover-green');
+        } else {
+          userIcon.classList.add('hover-red');
+        }
+      });
+
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+      event.preventDefault();
+      fetch('{{ url_for("logout") }}')
+        .then(() => {
+          window.location.href = '{{ url_for("home") }}';
+        });
+    });
+  </script>
+</body>
+</html>

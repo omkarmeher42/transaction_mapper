@@ -1,0 +1,10 @@
+/.env
+/__pycache__/
+/*.pyc
+/*.pyo  
+/instance
+/payments
+/services/__pycache__
+/routes/__pycache__
+/models/__pycache__
+/Sheets
