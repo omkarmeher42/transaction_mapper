@@ -695,12 +695,15 @@ grid-column: 1 / -1; /* Span both columns */
   min-height: 400px;
   overflow: auto;
   width: 120%;
+  overflow-x: auto; /* Enable horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 /* Transactions Table */
 .transactions-table {
   width: 100%;
   border-collapse: collapse;;
+  min-width: 900px; /* Ensure minimum width for content */
 }
 
 .transactions-table th,
@@ -711,6 +714,7 @@ grid-column: 1 / -1; /* Span both columns */
   /* border: 1px solid rgba(255, 255, 255, 0.1); */
   color: #fff;
   font-size: 18px;
+  white-space: nowrap; /* Prevent text wrapping */
 }
 
 .transactions-table th {
@@ -1053,4 +1057,19 @@ body.light-theme .dropdown-menu a:hover {
 .map-transaction-form.edit-form .btn-secondary:hover {
   transform: translateY(-3px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .view-container {
+    width: 100%; /* Full width on mobile */
+    margin: 0;
+    padding: 10px;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 15px 10px; /* Reduced padding on mobile */
+    font-size: 16px; /* Slightly smaller font */
+  }
 }

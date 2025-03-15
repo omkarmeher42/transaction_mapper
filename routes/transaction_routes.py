@@ -151,7 +151,8 @@ def download():
         elif action == 'download':
             try:
                 response = file_response
-                response.headers['Content-Disposition'] = f'attachment; filename="{file_name}.xlsx"'
+                # Set proper filename with quotes to handle special characters
+                response.headers['Content-Disposition'] = f'attachment; filename="{month}_{year}.xlsx"'
                 logging.debug(f'Content-Disposition: {response.headers["Content-Disposition"]}')
                 return response
             except Exception as e:

@@ -193,8 +193,10 @@
     function submitForm(action) {
       const form = document.getElementById('download-form');
       const formData = new FormData(form);
+      const month = formData.get('month');
+      const year = formData.get('year');
       formData.append('action', action);
-
+      
       fetch('{{ url_for("transaction.download") }}', {
         method: 'POST',
         body: formData
@@ -202,12 +204,17 @@
       .then(response => {
         if (response.ok) {
           if (action === 'download') {
+            // Get filename from Content-Disposition header if present
+            const filename = response.headers.get('Content-Disposition')
+              ?.split('filename=')[1]
+              ?.replace(/['"]/g, '') || `${month}_${year}.xlsx`;
+              
             return response.blob().then(blob => {
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.style.display = 'none';
               a.href = url;
-              a.download = 'transactions.xlsx'; // Adjust the filename as needed
+              a.download = filename;
               document.body.appendChild(a);
               a.click();
               window.URL.revokeObjectURL(url);

@@ -144,23 +144,34 @@ class ExcelService:
         workbook = openpyxl.load_workbook(file_path)
         sheet = workbook.active
         
-        # Find row by transaction_id (Sr No)
-        row_num = None
-        for row in range(4, sheet.max_row + 1):  # Start from row 4 (data starts after header)
-            if str(sheet.cell(row=row, column=1).value) == str(transaction_id):
-                row_num = row
-                break
-        
-        if row_num is None:
-            raise ValueError("Transaction not found")
-        
-        # Delete the row
-        sheet.delete_rows(row_num)
-        
+        # Find all non-empty rows and their data
+        valid_rows = []
+        for row in range(4, sheet.max_row + 1):
+            # Check if row has actual data (not just empty cells)
+            if any(sheet.cell(row=row, column=col).value for col in range(2, 8)):
+                sr_no = sheet.cell(row=row, column=1).value
+                if str(sr_no) == str(transaction_id):
+                    continue  # Skip the row to be deleted
+                row_data = [sheet.cell(row=row, column=col).value for col in range(1, 8)]
+                valid_rows.append(row_data)
+
+        # Clear all data rows
+        if sheet.max_row > 3:  # Only if there are data rows
+            sheet.delete_rows(4, sheet.max_row - 3)
+
+        # Rewrite all valid rows with new Sr No
+        for idx, row_data in enumerate(valid_rows, 1):
+            new_row = [idx] + row_data[1:]  # Replace old Sr No with new sequential number
+            sheet.append(new_row)
+            
+            # Center-align all cells in the row
+            for cell in sheet[sheet.max_row]:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+
         # Update the sum formula
         max_row = sheet.max_row
         headings = 7
-        amount_column = 'D'  # Assuming "Amount" is in column D
+        amount_column = 'D'
         sheet.cell(row=3, column=headings + 1, value=f"=SUM({amount_column}4:{amount_column}{max_row})").alignment = Alignment(horizontal='center', vertical='center')
         
         # Save the workbook
