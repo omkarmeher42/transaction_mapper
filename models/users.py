@@ -19,12 +19,14 @@ class User(UserMixin, db.Model):
     email_id = db.Column(db.String(100), unique=True, nullable=False)
     all_sheets = db.Column(JSON, default = dict)
 
-    def __init__(self, first_name, last_name, user_name,password, email_id):
+    def __init__(self, first_name, last_name, user_name, password, email_id):
         self.first_name = first_name
         self.last_name = last_name
         self.email_id = email_id
         self.user_name = user_name
         self.password = generate_password_hash(password)  # Hash the password
+        self.current_sheet_path = None
+        self.current_sheet_name = None
         self.make_user_dir()
         self.get_current_sheet()
 
@@ -67,57 +69,57 @@ class User(UserMixin, db.Model):
         return User.query.all()
 
     def get_current_sheet(self):
-        #refresh dates before continuing
+        """Get or create the current month's sheet and return its path"""
+        # Force refresh dates
         self.get_todays_date()
 
-        #current month sheet
+        # Current month sheet name
         file_name = f'{self.month}_{self.year}'
+        sheet_path = f'Sheets/{self.user_name}/{file_name}.xlsx'
 
-        if os.path.exists(f'Sheets/{self.user_name}') == False:
-            self.make_user_dir()
-
+        # Initialize sheets dictionary if needed
         if self.all_sheets is None:
             self.all_sheets = {}
 
-        user = User.query.get(self.id)
+        # Create user directory if it doesn't exist
+        if not os.path.exists(f'Sheets/{self.user_name}'):
+            self.make_user_dir()
 
-        #check if current month sheet exist
-        verify_sheet = os.path.exists(f'Sheets/{self.user_name}/{file_name}.xlsx')
-        if not verify_sheet:
-            #if sheet does not exist, create one
-            print(os.getcwd())
-            os.chdir(f'D:/Code/Transactions Mapper/Sheets/{self.user_name}')
-            
-            #creating a object of excel sheet using Spreadsheet class
-            sheet = SpreadSheet(file_name, user)
-
-            #this line creates a new spreadsheet as it doesnt exist in the user's dir
-            sheet.create_sheet()
-
-            os.chdir('../')
-            os.chdir('../')
-
-            #assigning newly created sheet to user's all_sheets
-            self.all_sheets[file_name] = f'Sheets/{self.user_name}/{file_name}.xlsx'
-            db.session.commit()
-
-        
-        if user is not None:
-            user_all_sheets = user.all_sheets
-            current_sheet = user_all_sheets.get(file_name)
-            self.current_sheet_path = current_sheet
-            self.current_sheet_name = file_name
-
-            if current_sheet:
-                # Check if the Excel file is blank and apply a template if it is
-                sheet = SpreadSheet(self.current_sheet_name, user)
-                if sheet.is_blank():
-                    sheet.apply_template()
-                return True
-            else:
+        # Create new sheet if it doesn't exist
+        if not os.path.exists(sheet_path):
+            try:
+                # Save current working directory
+                original_dir = os.getcwd()
+                os.chdir(f'{os.getcwd()}/Sheets/{self.user_name}')
+                
+                # Create new sheet
+                sheet = SpreadSheet(file_name, self)
+                sheet.create_sheet()
+                
+                # Return to original directory
+                os.chdir(original_dir)
+                
+                # Update all_sheets dictionary
+                self.all_sheets[file_name] = sheet_path
+                db.session.commit()
+            except Exception as e:
+                print(f"Error creating sheet: {str(e)}")
                 return False
-        else:
+
+        # Only update current sheet variables if everything is successful
+        self.current_sheet_path = sheet_path
+        self.current_sheet_name = file_name
+
+        # Apply template if sheet is blank
+        try:
+            sheet = SpreadSheet(self.current_sheet_name, self)
+            if sheet.is_blank():
+                sheet.apply_template()
+        except Exception as e:
+            print(f"Error applying template: {str(e)}")
             return False
+
+        return True
 
     def get_todays_date(self):
         today = get_current_month_and_year()

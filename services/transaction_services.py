@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment
 from services.email_service import send_email  # Import the send_email function
 import io
 
-class TransactionServices:       
+class TransactionServices:
 
     @staticmethod
     def generate_file_content(month, year, user_id):
@@ -16,16 +16,16 @@ class TransactionServices:
             if not user_id:
                 logging.error("User ID is missing")
                 return None, None, None
-            
+
             logging.debug(f"Starting download for month: {month}, year: {year}, user_id: {user_id}")
-            
+
             user = UserService.get_user_by_id(user_id)
             if not user:
                 logging.error(f"No user found with id: {user_id}")
                 return None, None, None
-            
+
             file_name = f'{month}_{year}'
-            file_path = f'Sheets/{user.user_name}/{file_name}.xlsx'
+            file_path = f'{os.getcwd()}/Sheets/{user.user_name}/{file_name}.xlsx'
 
             if os.path.exists(file_path):
                 logging.debug(f"XLSX file found: {file_path}")
@@ -38,7 +38,7 @@ class TransactionServices:
         except Exception as e:
             logging.error(f"Error in generate_file_content: {e}")
             return None, None, None
-    
+
     @staticmethod
     def send_file_via_email(file_path, user_id):
         try:
@@ -62,7 +62,7 @@ class TransactionServices:
             logging.info(f"Email sent successfully to {email_address}")
         except Exception as e:
             logging.error(f"Failed to send email to {email_address}: {e}")
-            
+
 
 class ExcelService:
 
@@ -112,17 +112,17 @@ class ExcelService:
         # Load the workbook and select the active sheet
         workbook = openpyxl.load_workbook(file_path)
         sheet = workbook.active
-        
+
         # Find row by transaction_id (Sr No)
         row_num = None
         for row in range(4, sheet.max_row + 1):  # Start from row 4 (data starts after header)
             if str(sheet.cell(row=row, column=1).value) == str(transaction_data['transaction_id']):
                 row_num = row
                 break
-        
+
         if row_num is None:
             raise ValueError("Transaction not found")
-        
+
         # Update the row with new data
         sheet.cell(row=row_num, column=2, value=transaction_data['date'])
         sheet.cell(row=row_num, column=3, value=transaction_data['title'])
@@ -130,11 +130,11 @@ class ExcelService:
         sheet.cell(row=row_num, column=5, value=transaction_data['category'])
         sheet.cell(row=row_num, column=6, value=transaction_data['sub_category'])
         sheet.cell(row=row_num, column=7, value=transaction_data['payment_method'])
-        
+
         # Center-align all cells in the updated row
         for cell in sheet[row_num]:
             cell.alignment = Alignment(horizontal='center', vertical='center')
-            
+
         # Save the workbook
         workbook.save(file_path)
 
@@ -143,7 +143,7 @@ class ExcelService:
         # Load the workbook and select the active sheet
         workbook = openpyxl.load_workbook(file_path)
         sheet = workbook.active
-        
+
         # Find all non-empty rows and their data
         valid_rows = []
         for row in range(4, sheet.max_row + 1):
@@ -163,7 +163,7 @@ class ExcelService:
         for idx, row_data in enumerate(valid_rows, 1):
             new_row = [idx] + row_data[1:]  # Replace old Sr No with new sequential number
             sheet.append(new_row)
-            
+
             # Center-align all cells in the row
             for cell in sheet[sheet.max_row]:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
@@ -173,7 +173,7 @@ class ExcelService:
         headings = 7
         amount_column = 'D'
         sheet.cell(row=3, column=headings + 1, value=f"=SUM({amount_column}4:{amount_column}{max_row})").alignment = Alignment(horizontal='center', vertical='center')
-        
+
         # Save the workbook
         workbook.save(file_path)
 
