@@ -50,6 +50,8 @@ def view_transactions():
         month = request.form.get('month')
         year = request.form.get('year')
         logging.debug(f"Form data received - Month: {month}, Year: {year}")
+        
+        # Log all_sheets as a dictionary, not trying to call .all()
         logging.debug(f"User's all_sheets: {current_user.all_sheets}")
 
         if not month or not year:
