@@ -55,10 +55,10 @@ def view_transactions():
             flash('Please select both month and year', 'error')
             return redirect(url_for('transaction.view_transactions'))
 
-        # Construct the file path using the username, month, and year
-        username = current_user.username
+        # Construct the file path using the user_name, month, and year
+        user_name = current_user.user_name
         file_name = f"{month}_{year}.xlsx"
-        file_path = os.path.join('Sheets', username, file_name)
+        file_path = os.path.join('sheets', user_name, file_name)
         logging.debug(f"Constructed file path: {file_path}")
 
         if not os.path.exists(file_path):
