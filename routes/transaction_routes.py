@@ -267,27 +267,31 @@ def spendings():
                                 total_spendings=None)
 
         try:
+            # Read total spendings from merged cell
+            wb = openpyxl.load_workbook(file_path)
+            sheet = wb.active
+            
+            # Find the merged cell containing total
+            merged_ranges = sheet.merged_cells.ranges
+            total_cell = None
+            for merged_range in merged_ranges:
+                if 'H3' in merged_range or 'I3' in merged_range:
+                    total_cell = sheet['H3']
+                    break
+            
+            total_spendings = total_cell.value if total_cell else None
+            wb.close()
+
             # Read transaction data
             df = pd.read_excel(file_path, skiprows=2)
-            logging.debug(f"Original columns: {df.columns.tolist()}")
-            
-            # Use the exact column names from your Excel file
-            category_column = 'Transaction Category'
-            amount_column = 'Transaction Amount'
-            
-            # Calculate spendings by category
-            spendings_data = df.groupby(category_column)[amount_column].sum().to_dict()
-            
-            # Calculate total spendings
-            total_spendings = df[amount_column].sum()
-            
-            logging.debug(f"Categories found: {list(spendings_data.keys())}")
-            logging.debug(f"Total spendings calculated: {total_spendings}")
+            spendings_data = df.groupby('Category')['Amount'].sum().to_dict()
+
+            if total_spendings is None:
+                # Calculate total if not found in merged cell
+                total_spendings = sum(spendings_data.values())
 
         except Exception as e:
             logging.error(f"Error processing file: {str(e)}")
-            logging.error(f"File path: {file_path}")
-            logging.exception("Full traceback:")
             flash('Error processing file', 'error')
             return render_template('spendings.html', 
                                 spendings_data={},
