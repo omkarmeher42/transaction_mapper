@@ -97,16 +97,16 @@
               <label for="year">Year</label>
               <select id="year" name="year">
                 <option value="" disabled>Select Year</option>
-                {% for year in range(2020, 2031) %}
+                {% for year in range(2025, 2031) %}
                   <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
                 {% endfor %}
               </select>
             </div>
-            <button type="submit" class="btn-primary view-button">
-              <i class="fa fa-eye" aria-hidden="true"></i>
-              <span>View</span>
-            </button>
           </div>
+          <button type="submit" class="btn-primary view-button">
+            <i class="fa fa-eye" aria-hidden="true"></i>
+            <span>View</span>
+          </button>
         </form>
       </div>
     </div>
