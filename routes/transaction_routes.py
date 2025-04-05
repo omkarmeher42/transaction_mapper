@@ -269,19 +269,18 @@ def spendings():
         try:
             logging.debug(f"Attempting to read file from: {file_path}")
             # Read the total spendings from cell H3
-            df = pd.read_excel(file_path, header=None)
-            total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
+            # df = pd.read_excel(file_path, header=None)
+            # total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
 
+            # Load the full sheet
             df = pd.read_excel(file_path, header=None)
 
-            # Find the location of the cell containing "Total Amount"
+            # Find "Total Amount"
             match = df.isin(["Total Amount"])
-
-            # Get the coordinates (row, column) of the match
             row_idx, col_idx = match.stack()[lambda x: x].index[0]
 
-            # Get the value directly beneath "Total Amount"
-            total_spendings = df.iloc[row_idx + 1, col_idx]
+            # Get value two rows below
+            total_spendings = df.iloc[row_idx + 2, col_idx]
 
             # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
