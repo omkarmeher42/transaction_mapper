@@ -272,15 +272,16 @@ def spendings():
             # df = pd.read_excel(file_path, header=None)
             # total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
 
-            # Load the full sheet
+            # Load the sheet
             df = pd.read_excel(file_path, header=None)
 
-            # Find "Total Amount"
+            # Locate "Total Amount"
             match = df.isin(["Total Amount"])
             row_idx, col_idx = match.stack()[lambda x: x].index[0]
 
-            # Get value two rows below
-            total_spendings = df.iloc[row_idx + 2, col_idx]
+            # Look downward and find the first numeric value
+            column_below = df.iloc[row_idx + 1 :, col_idx]
+            numeric_value = column_below[pd.to_numeric(column_below, errors='coerce').notna()].iloc[0]
 
             # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
