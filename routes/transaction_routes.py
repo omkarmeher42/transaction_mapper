@@ -98,7 +98,7 @@ def view_transactions():
             for index, row in df.iterrows():
                 transaction = {
                     'title': row.get('title', '') or row.get('Transaction Title', ''),
-                    'amount': row.get('amount', ''),
+                    'amount': int(row.get('amount', '')),
                     'category': row.get('category', ''),
                     'sub_category': row.get('sub_category', '') or row.get('Sub Category', ''),
                     'payment_method': row.get('payment_method', ''),
