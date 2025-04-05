@@ -267,28 +267,14 @@ def spendings():
                                 total_spendings=None)
 
         try:
-            # Read total spendings from merged cell
-            wb = openpyxl.load_workbook(file_path)
-            sheet = wb.active
+            # Read transaction data starting from row 4 (after headers)
+            df = pd.read_excel(file_path, skiprows=3)
             
-            # Find the merged cell containing total
-            merged_ranges = sheet.merged_cells.ranges
-            total_cell = None
-            for merged_range in merged_ranges:
-                if 'H3' in merged_range or 'I3' in merged_range:
-                    total_cell = sheet['H3']
-                    break
-            
-            total_spendings = total_cell.value if total_cell else None
-            wb.close()
-
-            # Read transaction data
-            df = pd.read_excel(file_path, skiprows=2)
+            # Calculate spendings by category
             spendings_data = df.groupby('Category')['Amount'].sum().to_dict()
-
-            if total_spendings is None:
-                # Calculate total if not found in merged cell
-                total_spendings = sum(spendings_data.values())
+            
+            # Calculate total spendings as sum of all amounts
+            total_spendings = df['Amount'].sum()
 
         except Exception as e:
             logging.error(f"Error processing file: {str(e)}")
