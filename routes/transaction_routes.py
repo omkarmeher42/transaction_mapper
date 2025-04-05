@@ -50,84 +50,76 @@ def view_transactions():
         month = request.form.get('month')
         year = request.form.get('year')
         logging.debug(f"Form data received - Month: {month}, Year: {year}")
-        
-        # Log all_sheets as a dictionary, not trying to call .all()
-        logging.debug(f"User's all_sheets: {current_user.all_sheets}")
 
         if not month or not year:
             flash('Please select both month and year', 'error')
             return redirect(url_for('transaction.view_transactions'))
 
-        # Construct the file key (e.g., "March_2025")
-        file_key = f"{month}_{year}"
-        logging.debug(f"Constructed file key: {file_key}")
+        # Construct the file path using the username, month, and year
+        username = current_user.username
+        file_name = f"{month}_{year}.xlsx"
+        file_path = os.path.join('Sheets', username, file_name)
+        logging.debug(f"Constructed file path: {file_path}")
 
-        file_path = current_user.all_sheets.get(file_key)
-        logging.debug(f"Retrieved file path: {file_path}")
-
-        if not file_path:
+        if not os.path.exists(file_path):
             flash('File not found', 'error')
-            logging.error(f"No file found for key: {file_key}")
-        else:
-            try:
-                if not os.path.exists(file_path):
-                    flash(f'File does not exist at path: {file_path}', 'error')
-                    logging.error(f"File does not exist at path: {file_path}")
-                    return render_template('view_transactions.html', transactions=[], request=request)
+            logging.error(f"File does not exist at path: {file_path}")
+            return render_template('view_transactions.html', transactions=[], request=request)
 
-                logging.debug(f"Attempting to read file from: {file_path}")
-                df = pd.read_excel(file_path, skiprows=2)
+        try:
+            logging.debug(f"Attempting to read file from: {file_path}")
+            df = pd.read_excel(file_path, skiprows=2)
 
-                logging.debug(f"Original Excel columns: {df.columns.tolist()}")
+            logging.debug(f"Original Excel columns: {df.columns.tolist()}")
 
-                # Map the actual Excel columns to our expected names
-                column_mapping = {
-                    'Sr No': 'sr_no',
-                    'Date': 'date',
-                    'Transaction Title': 'title',
-                    'Amount': 'amount',
-                    'Category': 'category',
-                    'Sub Category': 'sub_category',
-                    'Payment Method': 'payment_method'
+            # Map the actual Excel columns to our expected names
+            column_mapping = {
+                'Sr No': 'sr_no',
+                'Date': 'date',
+                'Transaction Title': 'title',
+                'Amount': 'amount',
+                'Category': 'category',
+                'Sub Category': 'sub_category',
+                'Payment Method': 'payment_method'
+            }
+
+            # Rename only the columns that exist
+            existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
+            df = df.rename(columns=existing_columns)
+
+            # Remove rows with all NaN values
+            df = df.dropna(how='all')
+
+            # Fill NaN values with empty strings
+            df = df.fillna('')
+
+            # Convert to dict with only the columns we want to show
+            transactions = []
+            for index, row in df.iterrows():
+                transaction = {
+                    'title': row.get('title', '') or row.get('Transaction Title', ''),
+                    'amount': row.get('amount', ''),
+                    'category': row.get('category', ''),
+                    'sub_category': row.get('sub_category', '') or row.get('Sub Category', ''),
+                    'payment_method': row.get('payment_method', ''),
+                    'date': row.get('date', '')
                 }
+                logging.debug(f"Processed transaction: {transaction}")
+                transactions.append(transaction)
 
-                # Rename only the columns that exist
-                existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
-                df = df.rename(columns=existing_columns)
+            logging.debug(f"Found {len(transactions)} transactions")
+            if transactions:
+                logging.debug(f"Sample transaction: {transactions[0]}")
 
-                # Remove rows with all NaN values
-                df = df.dropna(how='all')
-
-                # Fill NaN values with empty strings
-                df = df.fillna('')
-
-                # Convert to dict with only the columns we want to show
-                transactions = []
-                for index, row in df.iterrows():
-                    transaction = {
-                                                'title': row.get('title', '') or row.get('Transaction Title', ''),
-                        'amount': row.get('amount', ''),
-                        'category': row.get('category', ''),
-                        'sub_category': row.get('sub_category', '') or row.get('Sub Category', ''),
-                        'payment_method': row.get('payment_method', ''),
-                        'date': row.get('date', '')
-                    }
-                    logging.debug(f"Processed transaction: {transaction}")
-                    transactions.append(transaction)
-
-                logging.debug(f"Found {len(transactions)} transactions")
-                if transactions:
-                    logging.debug(f"Sample transaction: {transactions[0]}")
-
-            except Exception as e:
-                flash('Error reading file', 'error')
-                logging.error(f"Error reading file: {str(e)}")
-                logging.exception("Full traceback:")
-                return render_template('view_transactions.html', transactions=[], request=request)
+        except Exception as e:
+            flash('Error reading file', 'error')
+            logging.error(f"Error reading file: {str(e)}")
+            logging.exception("Full traceback:")
+            return render_template('view_transactions.html', transactions=[], request=request)
 
     return render_template('view_transactions.html',
-                         transactions=transactions,
-                         request=request)
+                           transactions=transactions,
+                           request=request)
 
 @transaction_bp.route('/download', methods=['GET', 'POST'])
 @login_required
