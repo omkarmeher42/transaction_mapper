@@ -272,16 +272,23 @@ def spendings():
             # df = pd.read_excel(file_path, header=None)
             # total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
 
-            # Load the sheet
-            df = pd.read_excel(file_path, header=None)
+            from openpyxl import load_workbook
 
-            # Locate "Total Amount"
-            match = df.isin(["Total Amount"])
-            row_idx, col_idx = match.stack()[lambda x: x].index[0]
+            # Load the workbook with data_only=True to get formula results
+            wb = load_workbook(file_path, data_only=True)
+            ws = wb.active
 
-            # Look downward and find the first numeric value
-            column_below = df.iloc[row_idx + 1 :, col_idx]
-            numeric_value = column_below[pd.to_numeric(column_below, errors='coerce').notna()].iloc[0]
+            # Search for the cell containing "Total Amount"
+            for row in ws.iter_rows():
+                for cell in row:
+                    if cell.value == "Total Amount":
+                        # Get the value in the cell below
+                        total_value_cell = ws.cell(row=cell.row + 1, column=cell.column)
+                        print("Total Spendings:", total_value_cell.value)
+                        break
+            
+            total_spendings = total_value_cell.value if total_value_cell.value else "Found nothing"
+            logging.debug(f"Total spendings cell value: {total_spendings}")
 
             # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
