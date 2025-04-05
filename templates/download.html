@@ -37,6 +37,12 @@
           <span>Download</span>
         </a>
       </div>
+      <div class="tab" id="spendings-tab" data-tab="spendings">
+        <a href="{{ url_for('transaction.spendings') }}">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Spendings</span>
+        </a>
+      </div>
     </div>
 
     <!-- Right Side: Theme Toggle and User Icon -->
@@ -140,7 +146,7 @@
 
       // Determine which tab should be active based on the current URL
       switch (currentPath) {
-        case '/dashboard':
+        case '/home':
           document.getElementById('dashboard-tab').classList.add('active');
           break;
         case '/map_transaction':
@@ -151,6 +157,9 @@
           break;
         case '/download':
           document.getElementById('download-tab').classList.add('active');
+          break;
+        case '/spendings':
+          document.getElementById('spendings-tab').classList.add('active');
           break;
         default:
           // Default to Dashboard if no match is found

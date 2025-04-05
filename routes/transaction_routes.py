@@ -245,6 +245,7 @@ def delete_transaction():
 @login_required
 def spendings():
     spendings_data = {}
+    total_spendings = None
     if request.method == 'POST':
         month = request.form.get('month')
         year = request.form.get('year')
@@ -263,10 +264,15 @@ def spendings():
         if not os.path.exists(file_path):
             flash('File not found', 'error')
             logging.error(f"File does not exist at path: {file_path}")
-            return render_template('spendings.html', spendings_data={}, request=request)
+            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
 
         try:
             logging.debug(f"Attempting to read file from: {file_path}")
+            # Read the total spendings from cell H3
+            df_total = pd.read_excel(file_path, usecols="H", nrows=3, header=None)
+            total_spendings = df_total.iloc[2, 0]  # Get value from H3
+
+            # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
 
             logging.debug(f"Original Excel columns: {df.columns.tolist()}")
@@ -300,9 +306,10 @@ def spendings():
             flash('Error reading file', 'error')
             logging.error(f"Error reading file: {str(e)}")
             logging.exception("Full traceback:")
-            return render_template('spendings.html', spendings_data={}, request=request)
+            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
 
     return render_template('spendings.html',
                            spendings_data=spendings_data,
+                           total_spendings=total_spendings,
                            request=request,
                            user=current_user)
