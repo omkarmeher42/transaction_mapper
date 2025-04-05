@@ -68,10 +68,36 @@ class User(UserMixin, db.Model):
     def get_all_users():
         return User.query.all()
 
+    def sync_all_sheets_with_directory(self):
+        """Ensure all sheets in the user's directory are present in all_sheets."""
+        user_dir = f'Sheets/{self.user_name}'
+
+        # If the directory doesn't exist, create it
+        if not os.path.exists(user_dir):
+            self.make_user_dir()
+            return
+
+        # List all files in the user's directory
+        for file_name in os.listdir(user_dir):
+            if file_name.endswith('.xlsx'):
+                sheet_path = f'{user_dir}/{file_name}'
+                sheet_name = file_name.replace('.xlsx', '')
+
+                # Add missing sheets to all_sheets
+                if sheet_name not in self.all_sheets:
+                    self.all_sheets[sheet_name] = sheet_path
+
+        # Commit changes to the database
+        db.session.add(self)
+        db.session.commit()
+
     def get_current_sheet(self):
         """Get or create the current month's sheet and return its path"""
         # Force refresh dates
         self.get_todays_date()
+
+        # Synchronize all_sheets with the user's directory
+        self.sync_all_sheets_with_directory()
 
         # Current month sheet name
         file_name = f'{self.month}_{self.year}'
