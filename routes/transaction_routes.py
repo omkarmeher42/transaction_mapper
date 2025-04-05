@@ -240,3 +240,68 @@ def delete_transaction():
         flash('Error deleting transaction', 'error')
 
     return redirect(url_for('transaction.view_transactions'))
+
+@transaction_bp.route('/spendings', methods=['GET', 'POST'])
+@login_required
+def spendings():
+    spendings_data = {}
+    if request.method == 'POST':
+        month = request.form.get('month')
+        year = request.form.get('year')
+        logging.debug(f"Form data received - Month: {month}, Year: {year}")
+
+        if not month or not year:
+            flash('Please select both month and year', 'error')
+            return redirect(url_for('transaction.spendings'))
+
+        # Construct the file path using the user_name, month, and year
+        user_name = current_user.user_name
+        file_name = f"{month}_{year}.xlsx"
+        file_path = os.path.join('sheets', user_name, file_name)
+        logging.debug(f"Constructed file path: {file_path}")
+
+        if not os.path.exists(file_path):
+            flash('File not found', 'error')
+            logging.error(f"File does not exist at path: {file_path}")
+            return render_template('spendings.html', spendings_data={}, request=request)
+
+        try:
+            logging.debug(f"Attempting to read file from: {file_path}")
+            df = pd.read_excel(file_path, skiprows=2)
+
+            logging.debug(f"Original Excel columns: {df.columns.tolist()}")
+
+            # Map the actual Excel columns to our expected names
+            column_mapping = {
+                'Sr No': 'sr_no',
+                'Date': 'date',
+                'Transaction Title': 'title',
+                'Amount': 'amount',
+                'Category': 'category',
+                'Sub Category': 'sub_category',
+                'Payment Method': 'payment_method'
+            }
+
+            # Rename only the columns that exist
+            existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
+            df = df.rename(columns=existing_columns)
+
+            # Remove rows with all NaN values
+            df = df.dropna(how='all')
+
+            # Fill NaN values with empty strings
+            df = df.fillna('')
+
+            # Calculate spendings by category
+            spendings_data = df.groupby('category')['amount'].sum().to_dict()
+            logging.debug(f"Calculated spendings by category: {spendings_data}")
+
+        except Exception as e:
+            flash('Error reading file', 'error')
+            logging.error(f"Error reading file: {str(e)}")
+            logging.exception("Full traceback:")
+            return render_template('spendings.html', spendings_data={}, request=request)
+
+    return render_template('spendings.html',
+                           spendings_data=spendings_data,
+                           request=request)
