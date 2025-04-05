@@ -58,7 +58,7 @@ def view_transactions():
         # Construct the file path using the user_name, month, and year
         user_name = current_user.user_name
         file_name = f"{month}_{year}.xlsx"
-        file_path = os.path.join('sheets', user_name, file_name)
+        file_path = os.path.join('Sheets', user_name, file_name)
         logging.debug(f"Constructed file path: {file_path}")
 
         if not os.path.exists(file_path):
