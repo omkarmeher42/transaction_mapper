@@ -77,6 +77,10 @@ class User(UserMixin, db.Model):
             self.make_user_dir()
             return
 
+        # Fetch all_sheets from the database
+        user_record = User.query.filter_by(id=self.id).first()
+        all_sheets = user_record.all_sheets if user_record and user_record.all_sheets else {}
+
         # List all files in the user's directory
         for file_name in os.listdir(user_dir):
             if file_name.endswith('.xlsx'):
@@ -84,11 +88,11 @@ class User(UserMixin, db.Model):
                 sheet_name = file_name.replace('.xlsx', '')
 
                 # Add missing sheets to all_sheets
-                if sheet_name not in self.all_sheets:
-                    self.all_sheets[sheet_name] = sheet_path
+                if sheet_name not in all_sheets:
+                    all_sheets[sheet_name] = sheet_path
 
-        # Commit changes to the database
-        db.session.add(self)
+        # Commit updated all_sheets to the database
+        User.query.filter_by(id=self.id).update({User.all_sheets: all_sheets})
         db.session.commit()
 
     def get_current_sheet(self):
@@ -103,9 +107,9 @@ class User(UserMixin, db.Model):
         file_name = f'{self.month}_{self.year}'
         sheet_path = f'Sheets/{self.user_name}/{file_name}.xlsx'
 
-        # Initialize sheets dictionary if needed
-        if self.all_sheets is None:
-            self.all_sheets = {}
+        # Fetch all_sheets from the database
+        user_record = User.query.filter_by(id=self.id).first()
+        all_sheets = user_record.all_sheets if user_record and user_record.all_sheets else {}
 
         # Create user directory if it doesn't exist
         if not os.path.exists(f'Sheets/{self.user_name}'):
@@ -126,8 +130,8 @@ class User(UserMixin, db.Model):
                 os.chdir(original_dir)
 
                 # Add the new sheet to all_sheets and commit to the database
-                self.all_sheets[file_name] = sheet_path
-                db.session.add(self)
+                all_sheets[file_name] = sheet_path
+                User.query.filter_by(id=self.id).update({User.all_sheets: all_sheets})
                 db.session.commit()
 
             except Exception as e:
@@ -135,9 +139,9 @@ class User(UserMixin, db.Model):
                 return False
 
         # Ensure the sheet is in all_sheets even if it already exists
-        if file_name not in self.all_sheets:
-            self.all_sheets[file_name] = sheet_path
-            db.session.add(self)
+        if file_name not in all_sheets:
+            all_sheets[file_name] = sheet_path
+            User.query.filter_by(id=self.id).update({User.all_sheets: all_sheets})
             db.session.commit()
 
         # Update current sheet variables
