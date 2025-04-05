@@ -1,54 +1,171 @@
-<!-- Extend the base layout -->
-{% extends "dashboard.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spendings - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <!-- Left Side: Tabs -->
+    <div class="tabs">
+        <div class="tab" id="dashboard-tab" data-tab="dashboard">
+          <a href="/dashboard">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+        </div>
+        <div class="tab" id="map-transaction-tab" data-tab="map-transaction">
+          <a href="/map_transaction">
+            <i class="fas fa-map"></i>
+            <span>Map Transaction</span>
+          </a>
+        </div>
+        <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
+          <a href="/view_transactions">
+            <i class="fas fa-list"></i>
+            <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="download-tab" data-tab="download">
+          <a href="/download">
+            <i class="fas fa-download"></i>
+            <span>Download</span>
+          </a>
+        </div>
+        <div class="tab" id="spendings-tab" data-tab="spendings">
+          <a href="{{ url_for('transaction.spendings') }}">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Spendings</span>
+          </a>
+        </div>
+      </div>
 
-{% block content %}
-<div class="container mt-4">
-    <h2>Spendings</h2>
-    <form method="POST" action="{{ url_for('transaction.spendings') }}">
-        <div class="form-group">
-            <label for="month">Month</label>
-            <select class="form-control" id="month" name="month">
-                <!-- Options for months -->
-                <option value="January">January</option>
-                <option value="February">February</option>
-                <option value="March">March</option>
-                <option value="April">April</option>
-                <option value="May">May</option>
-                <option value="June">June</option>
-                <option value="July">July</option>
-                <option value="August">August</option>
-                <option value="September">September</option>
-                <option value="October">October</option>
-                <option value="November">November</option>
-                <option value="December">December</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="year">Year</label>
-            <select class="form-control" id="year" name="year">
-                <!-- Options for years -->
-                {% for year in range(2020, 2031) %}
-                <option value="{{ year }}">{{ year }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">View</button>
-    </form>
+    <!-- Right Side: Theme Toggle and User Icon -->
+    <div class="user-actions">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <input type="checkbox" id="theme-switch">
+        <label for="theme-switch" class="toggle-slider"></label>
+      </div>
 
-    <div class="mt-4">
-        <h3>Spendings by Category</h3>
-        <div class="row">
-            {% for category, amount in spendings_data.items() %}
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ category }}</h5>
-                        <p class="card-text">Total Spendings: {{ amount }}</p>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+      <!-- User Icon -->
+      <div class="user-icon" onclick="handleUserIconClick();">
+        <i class="fas fa-user"></i>
+      </div>
+
+      <!-- Logout Link -->
+      <a href="#" id="logoutLink" class="logout-link">Logout</a>
     </div>
-</div>
-{% endblock %}
+  </nav>
+
+  <!-- Main Content -->
+  <main class="view-transactions-container">
+    <h1>Spendings Analysis</h1>
+
+    <div class="left-side-container">
+      <form method="POST" action="{{ url_for('transaction.spendings') }}" id="view-form" class="month-year-container">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="month">Month</label>
+            <select id="month" name="month">
+              <option value="" disabled>Select Month</option>
+              {% for month_name in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+                <option value="{{ month_name }}" {% if request.form.get('month') == month_name %}selected{% endif %}>{{ month_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="year">Year</label>
+            <select id="year" name="year">
+              <option value="" disabled>Select Year</option>
+              {% for year in range(2020, 2031) %}
+                <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary view-button">
+          <i class="fa fa-eye" aria-hidden="true"></i>
+          <span>View</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="view-container">
+      <div class="spending-cards">
+        {% for category, amount in spendings_data.items() %}
+        <div class="spending-card">
+          <h3>{{ category }}</h3>
+          <p class="amount">₹{{ amount }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // JavaScript for theme toggle
+    const themeSwitch = document.getElementById('theme-switch');
+    themeSwitch.addEventListener('change', () => {
+      document.body.classList.toggle('light-theme');
+    });
+
+    // Function to set the active tab based on the current URL
+    function setActiveTab() {
+      const currentPath = window.location.pathname;
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      switch (currentPath) {
+        case '/home':
+          document.getElementById('dashboard-tab').classList.add('active');
+          break;
+        case '/map_transaction':
+          document.getElementById('map-transaction-tab').classList.add('active');
+          break;
+        case '/view_transactions':
+          document.getElementById('view-transactions-tab').classList.add('active');
+          break;
+        case '/download':
+          document.getElementById('download-tab').classList.add('active');
+          break;
+        case '/spendings':
+          document.getElementById('spendings-tab').classList.add('active');
+          break;
+        default:
+          document.getElementById('dashboard-tab').classList.add('active');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', setActiveTab);
+    window.addEventListener('popstate', setActiveTab);
+
+    // JavaScript for tab highlighting
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // JavaScript for user icon logout
+    document.getElementById('logoutLink').addEventListener('click', function(event) {
+      event.preventDefault();
+      fetch('{{ url_for("logout") }}')
+        .then(() => {
+          window.location.href = '{{ url_for("home") }}';
+        });
+    });
+
+    function handleUserIconClick() {
+      window.location.href = '{{ url_for("user.user_details") }}';
+    }
+  </script>
+</body>
+</html>
