@@ -80,7 +80,6 @@ class User(UserMixin, db.Model):
         # Initialize sheets dictionary if needed
         if self.all_sheets is None:
             self.all_sheets = {}
-            db.session.commit()
 
         # Create user directory if it doesn't exist
         if not os.path.exists(f'Sheets/{self.user_name}'):
@@ -92,30 +91,30 @@ class User(UserMixin, db.Model):
                 # Save current working directory
                 original_dir = os.getcwd()
                 os.chdir(f'{os.getcwd()}/Sheets/{self.user_name}')
-                
+
                 # Create new sheet
                 sheet = SpreadSheet(file_name, self)
                 sheet.create_sheet()
-                
+
                 # Return to original directory
                 os.chdir(original_dir)
-                
-                # Update all_sheets dictionary and commit to database
+
+                # Add the new sheet to all_sheets and commit to the database
                 self.all_sheets[file_name] = sheet_path
                 db.session.add(self)
                 db.session.commit()
-                
+
             except Exception as e:
                 print(f"Error creating sheet: {str(e)}")
                 return False
-        
-        # Add to all_sheets if not already present
+
+        # Ensure the sheet is in all_sheets even if it already exists
         if file_name not in self.all_sheets:
             self.all_sheets[file_name] = sheet_path
             db.session.add(self)
             db.session.commit()
 
-        # Only update current sheet variables if everything is successful
+        # Update current sheet variables
         self.current_sheet_path = sheet_path
         self.current_sheet_name = file_name
 
