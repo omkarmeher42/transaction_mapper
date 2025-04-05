@@ -269,7 +269,7 @@ def spendings():
         try:
             logging.debug(f"Attempting to read file from: {file_path}")
             
-            df = pd.read_excel(file_path, skiprows=3)
+            df = pd.read_excel(file_path, skiprows=2)
 
             # Safely check for "Amount" column
             if "Amount" not in df.columns:
@@ -281,7 +281,7 @@ def spendings():
             logging.debug(f"Total spendings cell value: {total_spendings}")
 
             # Read transaction data starting from row 3
-            df = pd.read_excel(file_path, skiprows=2)
+            # df = pd.read_excel(file_path, skiprows=2)
 
             logging.debug(f"Original Excel columns: {df.columns.tolist()}")
 
