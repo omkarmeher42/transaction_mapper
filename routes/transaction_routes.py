@@ -278,7 +278,6 @@ def spendings():
             # Calculate total spendings
             total_spendings = df["Amount"].dropna().sum()
             
-            total_spendings = total_value_cell.value if total_value_cell.value else "Found nothing"
             logging.debug(f"Total spendings cell value: {total_spendings}")
 
             # Read transaction data starting from row 3
