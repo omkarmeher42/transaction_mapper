@@ -304,4 +304,5 @@ def spendings():
 
     return render_template('spendings.html',
                            spendings_data=spendings_data,
-                           request=request)
+                           request=request,
+                           user=current_user)
