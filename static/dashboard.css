@@ -690,14 +690,13 @@ grid-column: 1 / -1; /* Span both columns */
   background: rgba(46, 41, 78, 0.8); /* Glassy background */
   backdrop-filter: blur(10px);
   border-radius: 10px;
-  padding: 30px;
+  padding: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   min-height: 400px;
   overflow: auto;
   width: 120%;
   overflow-x: auto; /* Enable horizontal scroll */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  margin-top: 20px;
 }
 
 /* Transactions Table */
@@ -1261,9 +1260,4 @@ body.light-theme .dropdown-menu a:hover {
 
 .form-group {
   margin-bottom: 0;
-}
-
-.view-button {
-  margin: 0;
-  height: 42px;
 }
