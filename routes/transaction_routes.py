@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, send_file, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from services.transaction_services import TransactionServices, ExcelService
+from services.transaction_services import TransactionServices, ExcelService  # Import ExcelService
 import logging
 import io
 from datetime import datetime
-import os
+import os  # Add this import at the top with other imports
 import pandas as pd
-import openpyxl  # Add this import
 
 transaction_bp = Blueprint('transaction', __name__)
 
@@ -256,47 +255,61 @@ def spendings():
             flash('Please select both month and year', 'error')
             return redirect(url_for('transaction.spendings'))
 
+        # Construct the file path using the user_name, month, and year
         user_name = current_user.user_name
         file_name = f"{month}_{year}.xlsx"
         file_path = os.path.join('Sheets', user_name, file_name)
-        
+        logging.debug(f"Constructed file path: {file_path}")
+
         if not os.path.exists(file_path):
             flash('File not found', 'error')
-            return render_template('spendings.html', 
-                                spendings_data={},
-                                total_spendings=None)
+            logging.error(f"File does not exist at path: {file_path}")
+            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
 
         try:
-            # Read total spendings from merged cell
-            wb = openpyxl.load_workbook(file_path)
-            sheet = wb.active
-            
-            # Find the merged cell containing total
-            merged_ranges = sheet.merged_cells.ranges
-            total_cell = None
-            for merged_range in merged_ranges:
-                if 'H3' in merged_range or 'I3' in merged_range:
-                    total_cell = sheet['H3']
-                    break
-            
-            total_spendings = total_cell.value if total_cell else None
-            wb.close()
+            logging.debug(f"Attempting to read file from: {file_path}")
+            # Read the total spendings from cell H3
+            df_total = pd.read_excel(file_path, usecols="H", nrows=3, header=None)
+            total_spendings = df_total.iloc[2, 0]  # Get value from H3
 
-            # Read transaction data
+            # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
-            spendings_data = df.groupby('Category')['Amount'].sum().to_dict()
 
-            if total_spendings is None:
-                # Calculate total if not found in merged cell
-                total_spendings = sum(spendings_data.values())
+            logging.debug(f"Original Excel columns: {df.columns.tolist()}")
+
+            # Map the actual Excel columns to our expected names
+            column_mapping = {
+                'Sr No': 'sr_no',
+                'Date': 'date',
+                'Transaction Title': 'title',
+                'Amount': 'amount',
+                'Category': 'category',
+                'Sub Category': 'sub_category',
+                'Payment Method': 'payment_method'
+            }
+
+            # Rename only the columns that exist
+            existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
+            df = df.rename(columns=existing_columns)
+
+            # Remove rows with all NaN values
+            df = df.dropna(how='all')
+
+            # Fill NaN values with empty strings
+            df = df.fillna('')
+
+            # Calculate spendings by category
+            spendings_data = df.groupby('category')['amount'].sum().to_dict()
+            logging.debug(f"Calculated spendings by category: {spendings_data}")
 
         except Exception as e:
-            logging.error(f"Error processing file: {str(e)}")
-            flash('Error processing file', 'error')
-            return render_template('spendings.html', 
-                                spendings_data={},
-                                total_spendings=None)
+            flash('Error reading file', 'error')
+            logging.error(f"Error reading file: {str(e)}")
+            logging.exception("Full traceback:")
+            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
 
     return render_template('spendings.html',
-                       spendings_data=spendings_data,
-                       total_spendings=total_spendings)
+                           spendings_data=spendings_data,
+                           total_spendings=total_spendings,
+                           request=request,
+                           user=current_user)
