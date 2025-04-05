@@ -563,11 +563,63 @@ grid-column: 1 / -1; /* Span both columns */
 
 /* Left Container (Month/Year and View Button) */
 .month-year-container {
-  background: rgba(46, 41, 78, 0.8); /* Glassy background */
-  backdrop-filter: blur(10px);
-  border-radius: 10px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 15px;
+}
+
+.month-year-container .form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+}
+
+.month-year-container .btn-primary.view-button {
+  height: 42px;
+  padding: 0 20px;
+  margin: 0;
+  background: #28a745;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.month-year-container .btn-primary.view-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.month-year-container .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.month-year-container .btn-primary.view-button {
+  margin-top: 15px;
+  padding: 12px;
+  background: #28a745;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 5px;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.month-year-container .btn-primary.view-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
 }
 
 .month-year-container .form-group {
@@ -915,6 +967,16 @@ body.light-theme .dropdown-menu a:hover {
   padding: 25px;
   margin-top: 6px;
   margin-bottom: 8px;
+}
+
+.month-year-container .btn-primary.view-button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* Form Group Horizontal Layout */

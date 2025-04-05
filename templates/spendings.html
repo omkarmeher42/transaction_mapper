@@ -63,37 +63,52 @@
     </div>
   </nav>
 
+  <!-- Flash Messages Container -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
   <!-- Main Content -->
   <main class="view-transactions-container">
     <h1>Spendings Analysis</h1>
 
     <div class="left-side-container">
-      <form method="POST" action="{{ url_for('transaction.spendings') }}" id="view-form" class="month-year-container">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="month">Month</label>
-            <select id="month" name="month">
-              <option value="" disabled>Select Month</option>
-              {% for month_name in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
-                <option value="{{ month_name }}" {% if request.form.get('month') == month_name %}selected{% endif %}>{{ month_name }}</option>
-              {% endfor %}
-            </select>
+      <div class="month-year-container">
+        <form method="POST" action="{{ url_for('transaction.spendings') }}" id="view-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="month">Month</label>
+              <select id="month" name="month">
+                <option value="" disabled>Select Month</option>
+                {% for month_name in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+                  <option value="{{ month_name }}" {% if request.form.get('month') == month_name %}selected{% endif %}>{{ month_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="year">Year</label>
+              <select id="year" name="year">
+                <option value="" disabled>Select Year</option>
+                {% for year in range(2020, 2031) %}
+                  <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn-primary view-button">
+              <i class="fa fa-eye" aria-hidden="true"></i>
+              <span>View</span>
+            </button>
           </div>
-          <div class="form-group">
-            <label for="year">Year</label>
-            <select id="year" name="year">
-              <option value="" disabled>Select Year</option>
-              {% for year in range(2020, 2031) %}
-                <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <button type="submit" form="view-form" class="btn-primary view-button">
-            <i class="fa fa-eye" aria-hidden="true"></i>
-            <span>View</span>
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
 
     <div class="view-container">
@@ -168,6 +183,17 @@
         .then(() => {
           window.location.href = '{{ url_for("home") }}';
         });
+    });
+
+    // Add auto-hide for flash messages
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('.alert');
+      flashMessages.forEach(message => {
+        setTimeout(() => {
+          message.classList.add('fade-out');
+          setTimeout(() => message.remove(), 500);
+        }, 3000);
+      });
     });
 
     function handleUserIconClick() {
