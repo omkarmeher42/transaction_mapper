@@ -194,7 +194,7 @@ def update_transaction():
         date_obj = datetime.strptime(transaction_data['date'], '%Y-%m-%d')
         month = date_obj.strftime('%B')
         year = date_obj.strftime('%Y')
-        file_key = f"{month}_{year}"
+        file_key = f"{month}_{year}.xlsx"
         user_name = current_user.user_name
         file_path = os.path.join('Sheets', user_name, file_key)
         logging.debug(f"Constructed file path: {file_path}")
