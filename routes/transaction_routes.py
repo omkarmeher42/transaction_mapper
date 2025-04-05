@@ -268,24 +268,15 @@ def spendings():
 
         try:
             logging.debug(f"Attempting to read file from: {file_path}")
-            # Read the total spendings from cell H3
-            # df = pd.read_excel(file_path, header=None)
-            # total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
+            
+            df = pd.read_excel(file_path, skiprows=3)
 
-            from openpyxl import load_workbook
+            # Safely check for "Amount" column
+            if "Amount" not in df.columns:
+                raise ValueError("Could not find 'Amount' column in Excel file")
 
-            # Load the workbook with data_only=True to get formula results
-            wb = load_workbook(file_path, data_only=True)
-            ws = wb.active
-
-            # Search for the cell containing "Total Amount"
-            for row in ws.iter_rows():
-                for cell in row:
-                    if cell.value == "Total Amount":
-                        # Get the value in the cell below
-                        total_value_cell = ws.cell(row=cell.row + 1, column=cell.column)
-                        print("Total Spendings:", total_value_cell.value)
-                        break
+            # Calculate total spendings
+            total_spendings = df["Amount"].dropna().sum()
             
             total_spendings = total_value_cell.value if total_value_cell.value else "Found nothing"
             logging.debug(f"Total spendings cell value: {total_spendings}")
