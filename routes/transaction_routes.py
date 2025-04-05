@@ -269,8 +269,8 @@ def spendings():
         try:
             logging.debug(f"Attempting to read file from: {file_path}")
             # Read the total spendings from cell H3
-            df_total = pd.read_excel(file_path, usecols="H", nrows=3, header=None)
-            total_spendings = df_total.iloc[2, 0]  # Get value from H3
+            df = pd.read_excel(file_path, header=None)
+            total_spendings = df.iloc[2, 7]  # row 3 (index 2), column H (index 7)
 
             # Read transaction data starting from row 3
             df = pd.read_excel(file_path, skiprows=2)
