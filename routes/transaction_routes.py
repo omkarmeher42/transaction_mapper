@@ -267,17 +267,27 @@ def spendings():
                                 total_spendings=None)
 
         try:
-            # Read transaction data starting from row 4 (after headers)
-            df = pd.read_excel(file_path, skiprows=3)
+            # Read transaction data
+            df = pd.read_excel(file_path, skiprows=2)
+            logging.debug(f"Original columns: {df.columns.tolist()}")
+            
+            # Use the exact column names from your Excel file
+            category_column = 'Transaction Category'
+            amount_column = 'Transaction Amount'
             
             # Calculate spendings by category
-            spendings_data = df.groupby('Category')['Amount'].sum().to_dict()
+            spendings_data = df.groupby(category_column)[amount_column].sum().to_dict()
             
-            # Calculate total spendings as sum of all amounts
-            total_spendings = df['Amount'].sum()
+            # Calculate total spendings
+            total_spendings = df[amount_column].sum()
+            
+            logging.debug(f"Categories found: {list(spendings_data.keys())}")
+            logging.debug(f"Total spendings calculated: {total_spendings}")
 
         except Exception as e:
             logging.error(f"Error processing file: {str(e)}")
+            logging.error(f"File path: {file_path}")
+            logging.exception("Full traceback:")
             flash('Error processing file', 'error')
             return render_template('spendings.html', 
                                 spendings_data={},
