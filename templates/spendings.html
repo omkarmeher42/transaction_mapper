@@ -97,7 +97,7 @@
     </div>
 
     <div class="view-container">
-      {% if total_spendings %}
+      {% if total_spendings is not none %}
       <div class="total-spendings-card">
         <h2>Total Spendings</h2>
         <p class="amount">₹{{ total_spendings }}</p>

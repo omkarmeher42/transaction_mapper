@@ -690,13 +690,14 @@ grid-column: 1 / -1; /* Span both columns */
   background: rgba(46, 41, 78, 0.8); /* Glassy background */
   backdrop-filter: blur(10px);
   border-radius: 10px;
-  padding: 20px;
+  padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   min-height: 400px;
   overflow: auto;
   width: 120%;
   overflow-x: auto; /* Enable horizontal scroll */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  margin-top: 20px;
 }
 
 /* Transactions Table */
@@ -1160,7 +1161,8 @@ body.light-theme .dropdown-menu a:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
-  padding: 20px;
+  padding: 0;
+  margin-top: 20px;
 }
 
 .spending-card {
@@ -1173,6 +1175,8 @@ body.light-theme .dropdown-menu a:hover {
 
 .spending-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, #4c1d95, #6d28d9);
 }
 
 .spending-card h3 {
@@ -1188,11 +1192,11 @@ body.light-theme .dropdown-menu a:hover {
 }
 
 .total-spendings-card {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #2e1065, #581c87);
   border-radius: 12px;
   padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: 0 0 30px 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   text-align: center;
   color: white;
 }
@@ -1209,6 +1213,11 @@ body.light-theme .dropdown-menu a:hover {
   margin: 10px 0 0;
 }
 
+.total-spendings-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
 .spending-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1217,17 +1226,18 @@ body.light-theme .dropdown-menu a:hover {
 }
 
 .spending-card {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #3b0764, #4c1d95);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s, box-shadow 0.2s;
   color: white;
 }
 
 .spending-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, #4c1d95, #6d28d9);
 }
 
 .spending-card h3 {
