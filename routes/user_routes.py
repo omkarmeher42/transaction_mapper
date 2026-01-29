@@ -135,11 +135,14 @@ def register():
 
 @user_routes.route('/user/login', methods=['GET', 'POST'])
 def login():
+    from flask import session
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(user_name=form.user_name.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
+            # Set session as permanent if remember_me is checked
+            session.permanent = form.remember_me.data
+            login_user(user, remember=form.remember_me.data)
             flash('Logged in as {}!'.format(form.user_name.data), 'success')
             return redirect(url_for('dashboard'))
         else:

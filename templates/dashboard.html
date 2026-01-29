@@ -5,14 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Transaction Mapper</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <!-- Navbar -->
   <nav>
+    <!-- Mobile Hamburger Menu Toggle -->
+    <button class="hamburger-menu" id="hamburger-toggle" aria-label="Toggle navigation menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
     <!-- Left Side: Tabs -->
-    <div class="tabs">
+    <div class="tabs" id="nav-tabs">
         <div class="tab" id="dashboard-tab" data-tab="dashboard">
           <a href="/dashboard">
             <i class="fas fa-home"></i>
@@ -25,10 +31,28 @@
             <span>Map Transaction</span>
           </a>
         </div>
+        <div class="tab" id="quick-map-tab" data-tab="quick-map">
+          <a href="/quick_map">
+            <i class="fas fa-bolt"></i>
+            <span>Quick Map</span>
+          </a>
+        </div>
         <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
           <a href="/view_transactions">
             <i class="fas fa-list"></i>
             <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="budgets-tab" data-tab="budgets">
+          <a href="/budgets">
+            <i class="fas fa-wallet"></i>
+            <span>Budgets</span>
+          </a>
+        </div>
+        <div class="tab" id="recurring-tab" data-tab="recurring">
+          <a href="/recurring">
+            <i class="fas fa-redo"></i>
+            <span>Recurring</span>
           </a>
         </div>
         <div class="tab" id="download-tab" data-tab="download">
@@ -62,75 +86,107 @@
       <a href="#" id="logoutLink" class="logout-link">Logout</a>
     </div>
   </nav>
+  
+  <!-- Flash Messages -->
+  {% include 'notifications.html' %}
 
   <!-- Main Content -->
   <main>
-    <div class="welcome-message">
-      <h1>Welcome to Transaction Mapper, {{ user.user_name }}!</h1>
-      <p>Manage your transactions efficiently and stay on top of your finances.</p>
+    <div class="dashboard-content">
+      <div class="welcome-message">
+        <h1>Welcome back, {{ user.user_name }}!</h1>
+        <p>Here's what your finances look like this month.</p>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="card summary-card">
+          <div class="card-icon"><i class="fas fa-wallet"></i></div>
+          <div class="card-info">
+            <h3>Total Spent</h3>
+            <p>₹{{ summary.total_spent }}</p>
+          </div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="card-info">
+            <h3>Top Category</h3>
+            <p>{{ summary.top_category }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Visualization -->
+        <div class="card chart-container">
+          <h3>Spending by Category</h3>
+          <canvas id="spendingChart"></canvas>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card recent-transactions">
+          <h3>Recent Transactions</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in summary.recent_transactions %}
+                <tr>
+                  <td>{{ tx.date }}</td>
+                  <td>{{ tx.title }}</td>
+                  <td>₹{{ tx.amount }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <a href="/view_transactions" class="view-all-link">View All Transactions</a>
+        </div>
+      </div>
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    // JavaScript for theme toggle
-    const themeSwitch = document.getElementById('theme-switch');
-    themeSwitch.addEventListener('change', () => {
-      document.body.classList.toggle('light-theme');
+    // Initialize Chart
+    const ctx = document.getElementById('spendingChart').getContext('2d');
+    const labels = {{ summary.category_labels | tojson }};
+    const values = {{ summary.category_values | tojson }};
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Spending',
+          data: values,
+          backgroundColor: [
+            '#bb86fc', '#03dac6', '#cf6679', '#ffb74d', '#4fc3f7', '#aed581'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#a0a0a0' }
+          }
+        }
+      }
     });
 
-    // Function to set the active tab based on the current URL
-  function setActiveTab() {
-    const currentPath = window.location.pathname; // Get the current URL path
-    const tabs = document.querySelectorAll('.tab'); // Get all tabs
-
-    // Remove the 'active' class from all tabs
-    tabs.forEach(tab => tab.classList.remove('active'));
-
-    // Determine which tab should be active based on the current URL
-    switch (currentPath) {
-      case '/home':
+    // Custom tab highlighting for Dashboard
+    document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dashboard-tab').classList.add('active');
-        break;
-      case '/map_transaction':
-        document.getElementById('map-transaction-tab').classList.add('active');
-        break;
-      case '/view_transactions':
-        document.getElementById('view-transactions-tab').classList.add('active');
-        break;
-      case '/download':
-        document.getElementById('download-tab').classList.add('active');
-        break;
-      case '/spendings':
-        document.getElementById('spendings-tab').classList.add('active');
-        break;
-      default:
-        // Default to Dashboard if no match is found
-        document.getElementById('dashboard-tab').classList.add('active');
-    }
-  }
-
-  // Call the function when the page loads
-  document.addEventListener('DOMContentLoaded', setActiveTab);
-
-  // Call the function when navigating back/forward
-  window.addEventListener('popstate', setActiveTab);
-
-    // JavaScript for tab highlighting
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-      });
-    });
-
-    // JavaScript for user icon logout
-    document.getElementById('logoutLink').addEventListener('click', function(event) {
-      event.preventDefault();
-      fetch('{{ url_for("logout") }}')
-        .then(() => {
-          window.location.href = '{{ url_for("home") }}';
-        });
     });
 
     function handleUserIconClick() {

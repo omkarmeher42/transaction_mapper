@@ -1,4 +1,7 @@
-/* General Styles */
+html {
+  font-size: 14px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -26,7 +29,7 @@ nav {
   width: 100%;
   background: rgba(23, 23, 37, 0.9); /* Darker background */
   backdrop-filter: blur(10px);
-  padding: 10px 20px;
+  padding: 8px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -60,7 +63,7 @@ body.light-theme nav {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-radius: 5px 5px 0 0; /* Rounded top corners */
   color: #a0a0a0;
   cursor: pointer;
@@ -134,23 +137,102 @@ body.light-theme .tab:hover {
   min-width: fit-content; /* Ensure user actions don't collapse */
 }
 
-/* Responsive Styles */
+/* Hamburger Menu */
+.hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #a0a0a0;
+  padding: 10px;
+  z-index: 1100;
+  position: relative;
+}
+
+body.light-theme .hamburger-menu {
+  color: #666;
+}
+
+.hamburger-menu:hover {
+  color: #bb86fc;
+}
+
+/* Mobile Navigation - Hidden by default on mobile */
 @media (max-width: 768px) {
   nav {
-    padding: 10px; /* Reduce padding for smaller screens */
-    justify-content: flex-start; /* Allow items to flow from left */
+    padding: 10px;
+    justify-content: flex-start;
+    overflow: visible !important;
   }
 
-  .tabs {
-    gap: 10px; /* Reduce gap between tabs for smaller screens */
+  /* Show hamburger on mobile */
+  .hamburger-menu {
+    display: block !important;
+  }
+
+  /* Hide tabs container by default on mobile */
+  #nav-tabs {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 60px);
+    background: #171725;
+    flex-direction: column;
+    padding: 15px;
+    gap: 8px;
+    z-index: 1050;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light-theme #nav-tabs {
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Show menu when mobile-open class is added */
+  #nav-tabs.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Style tabs in mobile menu */
+  #nav-tabs .tab {
+    width: 100%;
+    padding: 15px 12px;
+    margin: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: none;
+  }
+
+  body.light-theme #nav-tabs .tab {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  #nav-tabs .tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  body.light-theme #nav-tabs .tab:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  #nav-tabs .tab.active {
+    background: rgba(187, 134, 252, 0.15);
   }
 
   .tab {
-    padding: 10px; /* Reduce padding for smaller screens */
+    padding: 10px;
   }
   
   .user-actions {
-    margin-left: 15px; /* Slightly reduce margin on smaller screens */
+    margin-left: auto;
   }
 }
 
@@ -284,7 +366,7 @@ body.light-theme .logout-link:hover {
   }
   
   .welcome-message h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     margin-bottom: 20px;
     background: linear-gradient(90deg, #bb86fc, #3700b3);
     background-clip: text;
@@ -300,6 +382,141 @@ body.light-theme .logout-link:hover {
   body.light-theme .welcome-message p {
     color: #666; /* Light theme paragraph text color */
   }
+
+/* Dashboard Enhancements */
+.dashboard-content {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: rgba(46, 41, 78, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+body.light-theme .card {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: rgba(187, 134, 252, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: #bb86fc;
+}
+
+.card-info h3 {
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-bottom: 5px;
+}
+
+.card-info p {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+body.light-theme .card-info p {
+    color: #333;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 20px;
+}
+
+@media (max-width: 992px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-container {
+    min-height: 400px;
+}
+
+.recent-transactions {
+    background: rgba(46, 41, 78, 0.8);
+}
+
+.recent-transactions h3 {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    color: #bb86fc;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    margin-bottom: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    padding: 12px;
+    color: #a0a0a0;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+td {
+    padding: 15px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #ddd;
+}
+
+body.light-theme td {
+    color: #555;
+    border-bottom: 1px solid #eee;
+}
+
+.view-all-link {
+    display: inline-block;
+    color: #bb86fc;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.view-all-link:hover {
+    text-decoration: underline;
+}
 
 /* Map Transaction Form */
 .map-transaction-form {
@@ -538,7 +755,7 @@ body.light-theme .logout-link:hover {
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -561,61 +778,79 @@ grid-column: 1 / -1; /* Span both columns */
   gap: 20px;
 }
 
-/* Left Container (Month/Year and View Button) */
-.month-year-container {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 15px;
+/* Transaction Filters */
+.transaction-filters {
+    background: rgba(46, 41, 78, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.month-year-container .form-row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.month-year-container .btn-primary.view-button {
-  height: 42px;
-  padding: 0 20px;
-  margin: 0;
-  background: #28a745;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.search-input-wrapper i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0a0a0;
 }
 
-.month-year-container .btn-primary.view-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+.search-input-wrapper input {
+    padding-left: 45px !important;
 }
 
-.month-year-container .form-group {
-  flex: 1;
-  margin-bottom: 0;
+.flex-2 {
+    flex: 2;
 }
 
-.month-year-container .btn-primary.view-button {
-  margin-top: 15px;
-  width: 100%;
-  height: 42px;
-  padding: 0 20px;
-  background: #28a745;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.transaction-filters .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 0;
+}
+
+.transaction-filters .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.transaction-filters label {
+    display: block;
+    margin-bottom: 5px;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.transaction-filters select,
+.transaction-filters input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.transaction-filters select:focus,
+.transaction-filters input:focus {
+    border-color: #bb86fc;
+    background: rgba(46, 41, 78, 0.9);
+    outline: none;
+}
+
+.transaction-filters .view-button {
+    margin-top: 10px;
 }
 
 .month-year-container .btn-primary.view-button:hover {
@@ -1334,4 +1569,221 @@ body.light-theme .dropdown-menu a:hover {
 
 .month-year-container .form-row {
   margin-bottom: 0;
+}
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 768px) {
+    body { padding-bottom: 70px; }
+    .summary-cards { grid-template-columns: 1fr; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    
+    /* View Transactions responsiveness */
+    main {
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
+        padding: 10px !important;
+        overflow-x: hidden !important;
+    }
+
+    .view-transactions-container {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .left-side-container {
+        width: 100% !important;
+        flex-direction: column;
+        gap: 15px;
+        padding: 0 20px !important;
+    }
+    
+    .transaction-filters .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .transaction-filters .form-group {
+        width: 100%;
+    }
+    
+    .view-container {
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        grid-column: 1 / -1;
+    }
+
+    /* Spendings responsiveness */
+    .total-spendings-card {
+        padding: 20px;
+        margin: 0 20px 20px 20px;
+    }
+
+    .total-spendings-card h2 {
+        font-size: 1.4rem;
+    }
+
+    .total-spendings-card .amount {
+        font-size: 2rem;
+    }
+
+    .spending-cards {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+    }
+
+    .spending-card {
+        width: auto;
+    }
+    
+    .month-year-container, 
+    .sort-filter-container {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-group label {
+        min-width: auto;
+        margin-bottom: 5px;
+    }
+
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .welcome-message h1 { font-size: 1.5rem; }
+    .card { padding: 15px; }
+    
+    .transactions-table th,
+    .transactions-table td {
+      padding: 12px 8px;
+      font-size: 14px;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-nav { display: none !important; }
+}
+
+/* Light Theme Overrides for Cards and Forms */
+body.light-theme .map-transaction-form.edit-form,
+body.light-theme .download-form,
+body.light-theme .user-details-form,
+body.light-theme .map-transaction-form {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .map-transaction-form h1,
+body.light-theme .download-form h1,
+body.light-theme .user-details-form h1 {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #3700b3; /* Deep purple for headers */
+}
+
+/* Light Theme Inputs */
+body.light-theme input,
+body.light-theme select {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+body.light-theme input:focus,
+body.light-theme select:focus {
+  border-color: #bb86fc;
+  background: #fff;
+}
+
+body.light-theme .form-group label {
+  color: #555;
+}
+
+/* Light Theme Spendings Cards */
+body.light-theme .total-spendings-card {
+  background: linear-gradient(135deg, #a78bfa, #8b5cf6); /* Lighter purple */
+  color: #fff;
+}
+
+body.light-theme .spending-card {
+  background: #fff;
+  color: #333;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+body.light-theme .spending-card h3 {
+  color: #333;
+}
+
+body.light-theme .spending-card .amount {
+  color: #3700b3;
+}
+
+/* Light Theme View Transactions Table */
+body.light-theme .transactions-table th {
+  background: #f0f0f0;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+}
+
+body.light-theme .transactions-table td {
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+
+body.light-theme .transactions-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Additional Light Theme Fixes */
+body.light-theme .month-year-container,
+body.light-theme .sort-filter-container,
+body.light-theme .view-container,
+body.light-theme .transaction-filters,
+body.light-theme .left-side-container .card {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+body.light-theme .view-container {
+    box-shadow: none; /* Avoid double shadow if inside another container */
+    background: transparent;
+}
+
+body.light-theme .transactions-table {
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Light Theme Quick Map Cards */
+body.light-theme .quick-card {
+  border-color: rgba(0,0,0,0.1);
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+body.light-theme .quick-card h4 {
+  color: #333 !important;
+}
+
+body.light-theme .quick-card:hover {
+  background: rgba(187, 134, 252, 0.1);
+  border-color: #bb86fc;
 }

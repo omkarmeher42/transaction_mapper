@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Budgets - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .budget-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #bb86fc;
+      transition: width 0.3s ease;
+    }
+    .progress-bar.warning { background: #ffb74d; }
+    .progress-bar.danger { background: #cf6679; }
+    
+    .budget-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #a0a0a0;
+    }
+    .budget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .budget-form-inline {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .budget-form-inline input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <!-- Mobile Hamburger Menu Toggle -->
+    <button class="hamburger-menu" id="hamburger-toggle" aria-label="Toggle navigation menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Left Side: Tabs -->
+    <div class="tabs" id="nav-tabs">
+      <div class="tab" id="dashboard-tab"><a href="/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></div>
+      <div class="tab" id="map-transaction-tab"><a href="/map_transaction"><i class="fas fa-map"></i><span>Map Transaction</span></a></div>
+      <div class="tab" id="quick-map-tab"><a href="/quick_map"><i class="fas fa-bolt"></i><span>Quick Map</span></a></div>
+      <div class="tab" id="view-transactions-tab"><a href="/view_transactions"><i class="fas fa-list"></i><span>View Transactions</span></a></div>
+      <div class="tab active" id="budgets-tab"><a href="/budgets"><i class="fas fa-wallet"></i><span>Budgets</span></a></div>
+      <div class="tab" id="recurring-tab"><a href="/recurring"><i class="fas fa-redo"></i><span>Recurring</span></a></div>
+      <div class="tab" id="download-tab"><a href="/download"><i class="fas fa-download"></i><span>Download</span></a></div>
+      <div class="tab" id="spendings-tab"><a href="{{ url_for('transaction.spendings') }}"><i class="fas fa-dollar-sign"></i><span>Spendings</span></a></div>
+    </div>
+    
+    <!-- Right Side: Theme Toggle and User Icon -->
+    <div class="user-actions">
+      <!-- Theme Toggle -->
+      <div class="theme-toggle">
+        <input type="checkbox" id="theme-switch">
+        <label for="theme-switch" class="toggle-slider"></label>
+      </div>
+
+      <!-- User Icon -->
+      <div class="user-icon" onclick="handleUserIconClick();">
+        <i class="fas fa-user"></i>
+      </div>
+
+      <!-- Logout Link -->
+      <a href="#" id="logoutLink" class="logout-link">Logout</a>
+    </div>
+  </nav>
+  
+  <!-- Flash Messages -->
+  {% include 'notifications.html' %}
+
+  <main style="display: block; padding-top: 80px;">
+    <div class="dashboard-content">
+      <div class="welcome-message">
+        <h1>Monthly Budgets</h1>
+        <p>Set spending limits for your categories and track your progress.</p>
+      </div>
+
+      <!-- Add/Update Budget Form -->
+      <div class="card" style="max-width: 600px; margin: 0 auto 30px;">
+        <h3>Set Category Budget</h3>
+        <form action="/budgets" method="POST" class="budget-form-inline">
+          <select name="category" required style="flex: 1; padding: 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1); background: rgba(46,41,78,0.8); color: white;">
+            <option value="Bills">Bills</option>
+            <option value="Food">Food & Dining</option>
+            <option value="Travel">Travel & Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Lend">Lend</option>
+            <option value="Rent">Rent</option>
+            <option value="Donate">Donate</option>
+            <option value="Investments">Investments</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="number" name="amount" placeholder="Amount (₹)" required>
+          <button type="submit" class="view-all-link" style="border: none; background: none; cursor: pointer;">Set Budget</button>
+        </form>
+      </div>
+
+      <div class="budget-grid">
+        {% for budget in budgets %}
+        <div class="card">
+          <div class="budget-header">
+            <h3>{{ budget.category }}</h3>
+            <span style="font-weight: 600; color: #bb86fc;">₹{{ budget.budget_amount }}</span>
+          </div>
+          
+          <div class="progress-bar-container">
+            <div class="progress-bar {% if budget.percent > 90 %}danger{% elif budget.percent > 70 %}warning{% endif %}" 
+                 style="width: {{ budget.percent }}%"></div>
+          </div>
+          
+          <div class="budget-info">
+            <span>Spent: ₹{{ budget.spent_amount }}</span>
+            <span>Remaining: ₹{{ budget.remaining }}</span>
+          </div>
+          
+          <div style="text-align: right; margin-top: 10px; font-size: 0.8rem; color: #666;">
+            {{ budget.percent | round(1) }}% of budget used
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    const themeSwitch = document.getElementById('theme-switch');
+    if (themeSwitch) {
+        themeSwitch.addEventListener('change', () => {
+          document.body.classList.toggle('light-theme');
+        });
+    }
+
+    function handleUserIconClick() {
+      window.location.href = '{{ url_for("user.user_details") }}';
+    }
+  </script>
+</body>
+</html>

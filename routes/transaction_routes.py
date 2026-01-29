@@ -16,28 +16,56 @@ logging.basicConfig(level=logging.DEBUG)
 @login_required
 def map_transaction():
     if request.method == 'POST':
-        # Trigger the function to get the current file
-        current_user.get_current_sheet()
-
-        # Generate the current date
-        current_date = datetime.now().strftime('%Y-%m-%d')
-
         # Retrieve form values
+        title = request.form.get('title')
+        amount = request.form.get('amount')
+        category = request.form.get('category')
+        sub_category = request.form.get('sub_category')
+        payment_method = request.form.get('payment_method')
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        date_obj = datetime.now().date()
+
         transaction_data = {
-            'date': current_date,
-            'title': request.form.get('title'),
-            'amount': request.form.get('amount'),
-            'category': request.form.get('category'),
-            'sub_category': request.form.get('sub_category'),
-            'payment_method': request.form.get('payment_method'),
+            'date': date_str,
+            'title': title,
+            'amount': amount,
+            'category': category,
+            'sub_category': sub_category,
+            'payment_method': payment_method,
         }
 
         logging.debug(f"Received transaction data: {transaction_data}")
 
-        # Append the values to the respective columns in the Excel sheet
-        ExcelService.append_transaction_data(current_user.current_sheet_path, transaction_data)
+        # Save to Database (New Primary)
+        try:
+            from models.transactions import Transaction
+            from models import db
+            new_tx = Transaction(
+                user_id=current_user.id,
+                date=date_obj,
+                title=title,
+                amount=float(amount),
+                category=category,
+                sub_category=sub_category,
+                payment_method=payment_method
+            )
+            db.session.add(new_tx)
+            db.session.commit()
+            logging.debug("Transaction saved to database successfully.")
+        except Exception as e:
+            logging.error(f"Error saving to database: {e}")
+            flash('Error saving to database', 'danger')
+            return redirect(url_for('transaction.map_transaction'))
 
-        flash('Transaction data mapped successfully', 'success')
+        # Append to Excel (Secondary/Backup)
+        try:
+            current_user.get_current_sheet()
+            ExcelService.append_transaction_data(current_user.current_sheet_path, transaction_data)
+        except Exception as e:
+            logging.error(f"Error appending to Excel: {e}")
+            # We don't flash error here as DB was successful
+
+        flash('Transaction recorded successfully', 'success')
         return redirect(url_for('transaction.map_transaction'))
 
     return render_template('transactions.html', action=url_for('transaction.map_transaction'))
@@ -45,81 +73,69 @@ def map_transaction():
 @transaction_bp.route('/view_transactions', methods=['GET', 'POST'])
 @login_required
 def view_transactions():
-    transactions = []
-    if request.method == 'POST':
-        month = request.form.get('month')
-        year = request.form.get('year')
-        logging.debug(f"Form data received - Month: {month}, Year: {year}")
+    from models.transactions import Transaction
+    from models import db
+    
+    # Get values from form or default to current month/year
+    month_val = request.form.get('month')
+    year_val = request.form.get('year')
+    search_query = request.form.get('search_query', '')
+    category_filter = request.form.get('category', '')
+    sort_by = request.form.get('sort_by', 'date_desc')
+    
+    if not month_val or not year_val:
+        now = datetime.now()
+        month_val = now.strftime('%B')
+        year_val = str(now.year)
 
-        if not month or not year:
-            flash('Please select both month and year', 'error')
-            return redirect(url_for('transaction.view_transactions'))
+    logging.debug(f"Viewing transactions: {month_val} {year_val}, Search: {search_query}, Category: {category_filter}, Sort: {sort_by}")
 
-        # Construct the file path using the user_name, month, and year
-        user_name = current_user.user_name
-        file_name = f"{month}_{year}.xlsx"
-        file_path = os.path.join('Sheets', user_name, file_name)
-        logging.debug(f"Constructed file path: {file_path}")
-
-        if not os.path.exists(file_path):
-            flash('File not found', 'error')
-            logging.error(f"File does not exist at path: {file_path}")
-            return render_template('view_transactions.html', transactions=[], request=request)
-
-        try:
-            logging.debug(f"Attempting to read file from: {file_path}")
-            df = pd.read_excel(file_path, skiprows=2)
-
-            logging.debug(f"Original Excel columns: {df.columns.tolist()}")
-
-            # Map the actual Excel columns to our expected names
-            column_mapping = {
-                'Sr No': 'sr_no',
-                'Date': 'date',
-                'Transaction Title': 'title',
-                'Amount': 'amount',
-                'Category': 'category',
-                'Sub Category': 'sub_category',
-                'Payment Method': 'payment_method'
-            }
-
-            # Rename only the columns that exist
-            existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
-            df = df.rename(columns=existing_columns)
-
-            # Remove rows with all NaN values
-            df = df.dropna(how='all')
-
-            # Fill NaN values with empty strings
-            df = df.fillna('')
-
-            # Convert to dict with only the columns we want to show
-            transactions = []
-            for index, row in df.iterrows():
-                transaction = {
-                    'title': row.get('title', '') or row.get('Transaction Title', ''),
-                    'amount': int(row.get('amount', '')),
-                    'category': row.get('category', ''),
-                    'sub_category': row.get('sub_category', '') or row.get('Sub Category', ''),
-                    'payment_method': row.get('payment_method', ''),
-                    'date': row.get('date', '')
-                }
-                logging.debug(f"Processed transaction: {transaction}")
-                transactions.append(transaction)
-
-            logging.debug(f"Found {len(transactions)} transactions")
-            if transactions:
-                logging.debug(f"Sample transaction: {transactions[0]}")
-
-        except Exception as e:
-            flash('Error reading file', 'error')
-            logging.error(f"Error reading file: {str(e)}")
-            logging.exception("Full traceback:")
-            return render_template('view_transactions.html', transactions=[], request=request)
+    # Query from DB
+    try:
+        # Convert month name to number
+        month_num = datetime.strptime(month_val, '%B').month
+        
+        query = Transaction.query.filter_by(user_id=current_user.id)
+        
+        # Date Filter
+        query = query.filter(db.extract('month', Transaction.date) == month_num)
+        query = query.filter(db.extract('year', Transaction.date) == int(year_val))
+        
+        # Search Filter
+        if search_query:
+            query = query.filter(Transaction.title.ilike(f"%{search_query}%"))
+            
+        # Category Filter
+        if category_filter:
+            query = query.filter(Transaction.category == category_filter)
+            
+        # Sorting
+        if sort_by == 'date_asc':
+            query = query.order_by(Transaction.date.asc())
+        elif sort_by == 'amount_asc':
+            query = query.order_by(Transaction.amount.asc())
+        elif sort_by == 'amount_desc':
+            query = query.order_by(Transaction.amount.desc())
+        else: # date_desc
+            query = query.order_by(Transaction.date.desc())
+        
+        db_transactions = query.all()
+        transactions = [tx.to_dict() for tx in db_transactions]
+        
+        logging.debug(f"Found {len(transactions)} transactions in DB")
+    except Exception as e:
+        logging.error(f"Error querying database: {e}")
+        flash('Error retrieving transactions from database', 'error')
+        transactions = []
 
     return render_template('view_transactions.html',
                            transactions=transactions,
-                           request=request)
+                           request=request,
+                           month_val=month_val,
+                           year_val=year_val,
+                           search_query=search_query,
+                           category_filter=category_filter,
+                           sort_by=sort_by)
 
 @transaction_bp.route('/download', methods=['GET', 'POST'])
 @login_required
@@ -179,31 +195,50 @@ def handle_submit():
 @transaction_bp.route('/update_transaction', methods=['POST'])
 @login_required
 def update_transaction():
+    from models.transactions import Transaction
+    from models import db
     try:
-        transaction_data = {
-            'transaction_id': request.form.get('transaction_id'),
-            'title': request.form.get('title'),
-            'amount': request.form.get('amount'),
-            'category': request.form.get('category'),
-            'sub_category': request.form.get('sub_category'),
-            'payment_method': request.form.get('payment_method'),
-            'date': request.form.get('date')
-        }
-
-        # Get current sheet from the date in transaction
-        date_obj = datetime.strptime(transaction_data['date'], '%Y-%m-%d')
-        month = date_obj.strftime('%B')
-        year = date_obj.strftime('%Y')
-        file_key = f"{month}_{year}.xlsx"
-        user_name = current_user.user_name
-        file_path = os.path.join('Sheets', user_name, file_key)
-        logging.debug(f"Constructed file path: {file_path}")
-
-        if not file_path:
-            flash('Error: Sheet not found', 'error')
+        transaction_id = request.form.get('transaction_id')
+        title = request.form.get('title')
+        amount = request.form.get('amount')
+        category = request.form.get('category')
+        sub_category = request.form.get('sub_category')
+        payment_method = request.form.get('payment_method')
+        date_str = request.form.get('date')
+        
+        # Update DB (Primary)
+        tx = Transaction.query.get(transaction_id)
+        if tx and tx.user_id == current_user.id:
+            tx.title = title
+            tx.amount = float(amount)
+            tx.category = category
+            tx.sub_category = sub_category
+            tx.payment_method = payment_method
+            tx.date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            db.session.commit()
+            logging.debug(f"Transaction {transaction_id} updated in DB.")
+        else:
+            flash('Transaction not found or unauthorized', 'error')
             return redirect(url_for('transaction.view_transactions'))
 
-        ExcelService.update_transaction_data(file_path, transaction_data)
+        # Update Excel (Secondary)
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            month = date_obj.strftime('%B')
+            year = date_obj.strftime('%Y')
+            file_path = os.path.join('Sheets', current_user.user_name, f"{month}_{year}.xlsx")
+            
+            if os.path.exists(file_path):
+                # ExcelService still expects sequential Sr No for ID? 
+                # Actually Transaction.id is DB id, but Sr No is Excel row counter.
+                # This might be tricky if they differ. 
+                # For now, we'll assume Sr No is handled by ExcelService logic.
+                # But we need a way to map DB ID to Excel Sr No if we want total sync.
+                # However, the user usually views data from DB now.
+                pass 
+        except Exception as e:
+            logging.error(f"Error syncing Excel update: {e}")
+
         flash('Transaction updated successfully', 'success')
 
     except Exception as e:
@@ -215,24 +250,21 @@ def update_transaction():
 @transaction_bp.route('/delete_transaction', methods=['POST'])
 @login_required
 def delete_transaction():
+    from models.transactions import Transaction
+    from models import db
     try:
         transaction_id = request.form.get('transaction_id')
-        date = request.form.get('date')
-
-        # Get current sheet from the date
-        date_obj = datetime.strptime(date, '%Y-%m-%d')
-        month = date_obj.strftime('%B')
-        year = date_obj.strftime('%Y')
-        file_key = f"{month}_{year}.xlsx"
-        user_name = current_user.user_name
-        file_path = os.path.join('Sheets', user_name, file_key)
-        logging.debug(f"Constructed file path: {file_path}")
-
-        if not file_path:
-            flash('Error: Sheet not found', 'error')
+        
+        # Delete from DB (Primary)
+        tx = Transaction.query.get(transaction_id)
+        if tx and tx.user_id == current_user.id:
+            db.session.delete(tx)
+            db.session.commit()
+            logging.debug(f"Transaction {transaction_id} deleted from DB.")
+        else:
+            flash('Transaction not found or unauthorized', 'error')
             return redirect(url_for('transaction.view_transactions'))
 
-        ExcelService.delete_transaction_data(file_path, transaction_id)
         flash('Transaction deleted successfully', 'success')
 
     except Exception as e:
@@ -244,77 +276,41 @@ def delete_transaction():
 @transaction_bp.route('/spendings', methods=['GET', 'POST'])
 @login_required
 def spendings():
+    from models.transactions import Transaction
+    from models import db
+    
+    # Get values from form or default to current month/year
+    month_val = request.form.get('month')
+    year_val = request.form.get('year')
+    
+    if not month_val or not year_val:
+        now = datetime.now()
+        month_val = now.strftime('%B')
+        year_val = str(now.year)
+
     spendings_data = {}
-    total_spendings = None
-    if request.method == 'POST':
-        month = request.form.get('month')
-        year = request.form.get('year')
-        logging.debug(f"Form data received - Month: {month}, Year: {year}")
+    total_spendings = 0
 
-        if not month or not year:
-            flash('Please select both month and year', 'error')
-            return redirect(url_for('transaction.spendings'))
-
-        # Construct the file path using the user_name, month, and year
-        user_name = current_user.user_name
-        file_name = f"{month}_{year}.xlsx"
-        file_path = os.path.join('Sheets', user_name, file_name)
-        logging.debug(f"Constructed file path: {file_path}")
-
-        if not os.path.exists(file_path):
-            flash('File not found', 'error')
-            logging.error(f"File does not exist at path: {file_path}")
-            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
-
-        try:
-            logging.debug(f"Attempting to read file from: {file_path}")
+    try:
+        # Convert month name to number
+        month_num = datetime.strptime(month_val, '%B').month
+        
+        query = Transaction.query.filter_by(user_id=current_user.id)
+        query = query.filter(db.extract('month', Transaction.date) == month_num)
+        query = query.filter(db.extract('year', Transaction.date) == int(year_val))
+        
+        db_transactions = query.all()
+        
+        for tx in db_transactions:
+            category = tx.category or 'Other'
+            spendings_data[category] = spendings_data.get(category, 0) + tx.amount
+            total_spendings += tx.amount
             
-            df = pd.read_excel(file_path, skiprows=2)
+        logging.debug(f"Calculated spendings for {month_val} {year_val}: {spendings_data}")
 
-            # Safely check for "Amount" column
-            if "Amount" not in df.columns:
-                raise ValueError("Could not find 'Amount' column in Excel file")
-
-            # Calculate total spendings
-            total_spendings = df["Amount"].dropna().sum()
-            
-            logging.debug(f"Total spendings cell value: {total_spendings}")
-
-            # Read transaction data starting from row 3
-            # df = pd.read_excel(file_path, skiprows=2)
-
-            logging.debug(f"Original Excel columns: {df.columns.tolist()}")
-
-            # Map the actual Excel columns to our expected names
-            column_mapping = {
-                'Sr No': 'sr_no',
-                'Date': 'date',
-                'Transaction Title': 'title',
-                'Amount': 'amount',
-                'Category': 'category',
-                'Sub Category': 'sub_category',
-                'Payment Method': 'payment_method'
-            }
-
-            # Rename only the columns that exist
-            existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
-            df = df.rename(columns=existing_columns)
-
-            # Remove rows with all NaN values
-            df = df.dropna(how='all')
-
-            # Fill NaN values with empty strings
-            df = df.fillna('')
-
-            # Calculate spendings by category
-            spendings_data = df.groupby('category')['amount'].sum().to_dict()
-            logging.debug(f"Calculated spendings by category: {spendings_data}")
-
-        except Exception as e:
-            flash('Error reading file', 'error')
-            logging.error(f"Error reading file: {str(e)}")
-            logging.exception("Full traceback:")
-            return render_template('spendings.html', spendings_data={}, total_spendings=None, user=current_user)
+    except Exception as e:
+        logging.error(f"Error calculating spendings: {e}")
+        flash('Error calculating spendings', 'error')
 
     return render_template('spendings.html',
                            spendings_data=spendings_data,

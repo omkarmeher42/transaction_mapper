@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Transaction Tracker</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
@@ -53,6 +54,9 @@
       </div>
     </div>
 
+    <!-- Flash Messages -->
+    {% include 'notifications.html' %}
+
     <!-- Hero Section -->
     <main>
       <section class="hero">
@@ -95,13 +99,18 @@
         }
       });
 
-    document.getElementById('logoutLink').addEventListener('click', function(event) {
-      event.preventDefault();
-      fetch('{{ url_for("logout") }}')
-        .then(() => {
-          window.location.href = '{{ url_for("home") }}';
-        });
-    });
+    // Logout link only exists on dashboard
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        fetch('{{ url_for("logout") }}')
+          .then(() => {
+            window.location.href = '{{ url_for("home") }}';
+          });
+      });
+    }
   </script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

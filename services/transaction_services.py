@@ -177,3 +177,43 @@ class ExcelService:
         # Save the workbook
         workbook.save(file_path)
 
+    @staticmethod
+    def process_recurring_transactions(user_id):
+        from models.budget_recurring import RecurringTransaction
+        from models.transactions import Transaction
+        from models import db
+        from datetime import datetime, date
+        
+        today = date.today()
+        # Find active recurring transactions for this user that haven't been logged this month
+        # and whose day has passed or is today
+        recurring_txs = RecurringTransaction.query.filter_by(user_id=user_id, is_active=True).all()
+        
+        for rtx in recurring_txs:
+            # Check if already logged this month
+            if rtx.last_logged and rtx.last_logged.month == today.month and rtx.last_logged.year == today.year:
+                continue
+                
+            # Check if today is matching or past the scheduled day
+            if today.day >= rtx.day_of_month:
+                try:
+                    # Create the transaction
+                    new_tx = Transaction(
+                        user_id=user_id,
+                        date=today,
+                        title=f"[Recurring] {rtx.title}",
+                        amount=rtx.amount,
+                        category=rtx.category,
+                        sub_category=rtx.sub_category,
+                        payment_method=rtx.payment_method
+                    )
+                    db.session.add(new_tx)
+                    
+                    # Update the recurring transaction's last logged date
+                    rtx.last_logged = today
+                    db.session.commit()
+                    logging.info(f"Automatically logged recurring transaction: {rtx.title} for user {user_id}")
+                except Exception as e:
+                    logging.error(f"Error processing recurring transaction {rtx.id}: {e}")
+                    db.session.rollback()
+

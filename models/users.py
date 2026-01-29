@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
-db = SQLAlchemy()
+# db = SQLAlchemy()  # Removed redundant initialization
 
 class User(UserMixin, db.Model):
 

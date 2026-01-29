@@ -5,14 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spendings - Transaction Mapper</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <!-- Navbar -->
   <nav>
+    <!-- Mobile Hamburger Menu Toggle -->
+    <button class="hamburger-menu" id="hamburger-toggle" aria-label="Toggle navigation menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
     <!-- Left Side: Tabs -->
-    <div class="tabs">
+    <div class="tabs" id="nav-tabs">
         <div class="tab" id="dashboard-tab" data-tab="dashboard">
           <a href="/dashboard">
             <i class="fas fa-home"></i>
@@ -25,10 +31,28 @@
             <span>Map Transaction</span>
           </a>
         </div>
+        <div class="tab" id="quick-map-tab" data-tab="quick-map">
+          <a href="/quick_map">
+            <i class="fas fa-bolt"></i>
+            <span>Quick Map</span>
+          </a>
+        </div>
         <div class="tab" id="view-transactions-tab" data-tab="view-transactions">
           <a href="/view_transactions">
             <i class="fas fa-list"></i>
             <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="budgets-tab" data-tab="budgets">
+          <a href="/budgets">
+            <i class="fas fa-wallet"></i>
+            <span>Budgets</span>
+          </a>
+        </div>
+        <div class="tab" id="recurring-tab" data-tab="recurring">
+          <a href="/recurring">
+            <i class="fas fa-redo"></i>
+            <span>Recurring</span>
           </a>
         </div>
         <div class="tab" id="download-tab" data-tab="download">
@@ -64,17 +88,7 @@
   </nav>
 
   <!-- Flash Messages Container -->
-  <div class="flash-messages">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
+  {% include 'notifications.html' %}
 
   <!-- Main Content -->
   <main class="view-transactions-container">
@@ -130,70 +144,11 @@
     </div>
   </main>
 
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    // JavaScript for theme toggle
-    const themeSwitch = document.getElementById('theme-switch');
-    themeSwitch.addEventListener('change', () => {
-      document.body.classList.toggle('light-theme');
-    });
-
-    // Function to set the active tab based on the current URL
-    function setActiveTab() {
-      const currentPath = window.location.pathname;
-      const tabs = document.querySelectorAll('.tab');
-      tabs.forEach(tab => tab.classList.remove('active'));
-      
-      switch (currentPath) {
-        case '/home':
-          document.getElementById('dashboard-tab').classList.add('active');
-          break;
-        case '/map_transaction':
-          document.getElementById('map-transaction-tab').classList.add('active');
-          break;
-        case '/view_transactions':
-          document.getElementById('view-transactions-tab').classList.add('active');
-          break;
-        case '/download':
-          document.getElementById('download-tab').classList.add('active');
-          break;
-        case '/spendings':
-          document.getElementById('spendings-tab').classList.add('active');
-          break;
-        default:
-          document.getElementById('dashboard-tab').classList.add('active');
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', setActiveTab);
-    window.addEventListener('popstate', setActiveTab);
-
-    // JavaScript for tab highlighting
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-      });
-    });
-
-    // JavaScript for user icon logout
-    document.getElementById('logoutLink').addEventListener('click', function(event) {
-      event.preventDefault();
-      fetch('{{ url_for("logout") }}')
-        .then(() => {
-          window.location.href = '{{ url_for("home") }}';
-        });
-    });
-
-    // Add auto-hide for flash messages
-    document.addEventListener('DOMContentLoaded', function() {
-      const flashMessages = document.querySelectorAll('.alert');
-      flashMessages.forEach(message => {
-        setTimeout(() => {
-          message.classList.add('fade-out');
-          setTimeout(() => message.remove(), 500);
-        }, 3000);
-      });
+    // Custom tab highlighting for Spendings
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('spendings-tab').classList.add('active');
     });
 
     function handleUserIconClick() {

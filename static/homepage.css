@@ -1,4 +1,7 @@
-/* General Styles */
+html {
+  font-size: 14px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -179,7 +182,7 @@ body.light-theme .dropdown-menu a:hover {
 }
 
 .hero h1 {
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: 600;
   margin-bottom: 20px;
   background: linear-gradient(90deg, #bb86fc, #3700b3);
@@ -188,7 +191,7 @@ body.light-theme .dropdown-menu a:hover {
 }
 
 .hero p {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #a0a0a0;
   max-width: 600px;
   margin-bottom: 40px;
@@ -321,7 +324,7 @@ footer {
 .registration-box {
   display: flex;
   width: 95%;
-  max-width: 1300px;
+  max-width: 1000px;
   background: rgba(46, 41, 78, 0.8); /* Dark purple with transparency */
   backdrop-filter: blur(10px); /* Glassy effect */
   
@@ -348,7 +351,7 @@ footer {
 /* Right Side: Registration Form */
 .form-section {
   flex: 40%; /* 40% of the rectangle */
-  padding: 40px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -814,4 +817,36 @@ footer {
 .flash-message.danger {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+/* Remember Me Checkbox Styling */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #bb86fc;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+.error-message {
+  color: #cf6679;
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.is-invalid {
+  border-color: #cf6679 !important;
 }

@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register - Transaction Mapper</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='homepage.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <div class="registration-container">
     <!-- Navbar and User Icon -->
     <div class="header">
       <nav>
@@ -21,6 +22,10 @@
         </ul>
       </nav>
     </div>
+
+    <!-- Flash Messages -->
+    {% include 'notifications.html' %}
+
     <div class="registration-container">
       <!-- Translucent Rectangle -->
       <div class="registration-box">
@@ -66,5 +71,6 @@
     </div>
     </div>
   </div>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

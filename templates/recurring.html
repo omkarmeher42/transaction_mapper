@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recurring Transactions - Transaction Mapper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .recurring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .recurring-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .day-badge {
+      background: #bb86fc;
+      color: #1e1e2f;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <!-- Mobile Hamburger Menu Toggle -->
+    <button class="hamburger-menu" id="hamburger-toggle" aria-label="Toggle navigation menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Left Side: Tabs -->
+    <div class="tabs" id="nav-tabs">
+      <div class="tab" id="dashboard-tab"><a href="/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></div>
+      <div class="tab" id="map-transaction-tab"><a href="/map_transaction"><i class="fas fa-map"></i><span>Map Transaction</span></a></div>
+      <div class="tab" id="quick-map-tab"><a href="/quick_map"><i class="fas fa-bolt"></i><span>Quick Map</span></a></div>
+      <div class="tab" id="view-transactions-tab"><a href="/view_transactions"><i class="fas fa-list"></i><span>View Transactions</span></a></div>
+      <div class="tab" id="budgets-tab"><a href="/budgets"><i class="fas fa-wallet"></i><span>Budgets</span></a></div>
+      <div class="tab active" id="recurring-tab"><a href="/recurring"><i class="fas fa-redo"></i><span>Recurring</span></a></div>
+      <div class="tab" id="download-tab"><a href="/download"><i class="fas fa-download"></i><span>Download</span></a></div>
+      <div class="tab" id="spendings-tab"><a href="{{ url_for('transaction.spendings') }}"><i class="fas fa-dollar-sign"></i><span>Spendings</span></a></div>
+    </div>
+    <div class="user-actions">
+      <div class="theme-toggle"><input type="checkbox" id="theme-switch"><label for="theme-switch" class="toggle-slider"></label></div>
+      <div class="user-icon" onclick="window.location.href='/user/details'"><i class="fas fa-user"></i></div>
+  </nav>
+
+  <!-- Flash Messages -->
+  {% include 'notifications.html' %}
+
+  <main style="display: block; padding-top: 80px;">
+    <div class="dashboard-content">
+      <div class="welcome-message">
+        <h1>Recurring Transactions</h1>
+        <p>Manage expenses that repeat every month (Rent, Subscriptions, etc.).</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Add Recurring Form -->
+        <div class="card">
+          <h3>Add Recurring Expense</h3>
+          <form action="/recurring" method="POST" class="map-transaction-form" style="background: none; box-shadow: none; padding: 0; max-width: 100%;">
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" name="title" placeholder="e.g. Netflix Subscription" required>
+            </div>
+            <div class="form-row" style="display: flex; gap: 10px;">
+              <div class="form-group" style="flex: 1;">
+                <label>Amount (₹)</label>
+                <input type="number" name="amount" required>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label>Day of Month</label>
+                <input type="number" name="day_of_month" min="1" max="31" placeholder="1-31" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category" required>
+                <option value="Bills">Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Rent">Rent</option>
+                <option value="Investments">Investments</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <select name="payment_method" required>
+                <option value="UPI">UPI</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">Add Recurring</button>
+          </form>
+        </div>
+
+        <!-- List Recurring -->
+        <div class="card">
+          <h3>Active Recurring Expenses</h3>
+          <div class="recurring-grid">
+            {% for tx in recurring_transactions %}
+            <div class="card" style="background: rgba(255,255,255,0.05);">
+              <div class="budget-header">
+                <div>
+                  <h4 style="margin:0;">{{ tx.title }}</h4>
+                  <small style="color: #666;">{{ tx.category }}</small>
+                </div>
+                <span style="color: #bb86fc; font-weight: 600;">₹{{ tx.amount }}</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <span class="day-badge">Day {{ tx.day_of_month }}</span>
+                <span style="font-size: 0.8rem; color: #a0a0a0; margin-left: 10px;">via {{ tx.payment_method }}</span>
+              </div>
+              <form action="{{ url_for('budget.delete_recurring', id=tx.id) }}" method="POST" style="text-align: right;">
+                <button type="submit" style="color: #cf6679; background: none; border: none; cursor: pointer; font-size: 0.8rem;">
+                  <i class="fas fa-trash"></i> Remove
+                </button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    const themeSwitch = document.getElementById('theme-switch');
+    themeSwitch.addEventListener('change', () => {
+      document.body.classList.toggle('light-theme');
+    });
+  </script>
+</body>
+</html>

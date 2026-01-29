@@ -11,8 +11,13 @@
 <body>
   <!-- Navbar -->
   <nav>
+    <!-- Mobile Hamburger Menu Toggle -->
+    <button class="hamburger-menu" id="hamburger-toggle" aria-label="Toggle navigation menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
     <!-- Left Side: Tabs -->
-    <div class="tabs">
+    <div class="tabs" id="nav-tabs">
         <div class="tab" id="dashboard-tab" data-tab="dashboard">
           <a href="/dashboard">
             <i class="fas fa-home"></i>
@@ -29,6 +34,18 @@
           <a href="/view_transactions">
             <i class="fas fa-list"></i>
             <span>View Transactions</span>
+          </a>
+        </div>
+        <div class="tab" id="budgets-tab" data-tab="budgets">
+          <a href="/budgets">
+            <i class="fas fa-wallet"></i>
+            <span>Budgets</span>
+          </a>
+        </div>
+        <div class="tab" id="recurring-tab" data-tab="recurring">
+          <a href="/recurring">
+            <i class="fas fa-redo"></i>
+            <span>Recurring</span>
           </a>
         </div>
         <div class="tab" id="download-tab" data-tab="download">
@@ -58,15 +75,7 @@
   </nav>
 
   <!-- Flash Messages Container -->
-  <div class="flash-messages">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
+  {% include 'notifications.html' %}
 
   <!-- Main Content -->
   <main>
@@ -103,6 +112,7 @@
     </div>
   </main>
 
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
     // Update user details
     document.getElementById('update-user-form').addEventListener('submit', function(e) {
@@ -140,16 +150,31 @@
       });
     });
 
+    // Function to show flash message (using centralized container)
     function showFlashMessage(message, category) {
-      const flashContainer = document.querySelector('.flash-messages');
+      const flashContainer = document.getElementById('flash-messages-container');
+      if (!flashContainer) return;
+
       const flashMessage = document.createElement('div');
       flashMessage.className = `alert alert-${category}`;
-      flashMessage.textContent = message;
+      flashMessage.role = 'alert';
+      
+      flashMessage.innerHTML = `
+        <span class="alert-message">${message}</span>
+        <button type="button" class="close-btn" aria-label="Close" onclick="this.parentElement.classList.add('fade-out'); setTimeout(() => this.parentElement.remove(), 400);">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
       flashContainer.appendChild(flashMessage);
+      
+      // Auto-hide after 5 seconds
       setTimeout(() => {
-        flashMessage.classList.add('fade-out');
-        setTimeout(() => flashMessage.remove(), 500);
-      }, 3000);
+          if (flashMessage && flashMessage.parentElement) {
+              flashMessage.classList.add('fade-out');
+              setTimeout(() => { flashMessage.remove(); }, 400);
+          }
+      }, 5000);
     }
 
     // JavaScript for theme toggle
@@ -210,5 +235,6 @@
       window.location.href = '{{ url_for("user.user_details") }}';
     }
   </script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
