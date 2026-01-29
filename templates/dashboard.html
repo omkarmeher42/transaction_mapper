@@ -114,6 +114,20 @@
             <p>{{ summary.top_category }}</p>
           </div>
         </div>
+        <div class="card summary-card">
+          <div class="card-icon"><i class="fas fa-calculator"></i></div>
+          <div class="card-info">
+            <h3>Daily Average</h3>
+            <p>₹{{ summary.analytics.daily_average | default(0) }}</p>
+          </div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-icon"><i class="fas fa-coins"></i></div>
+          <div class="card-info">
+            <h3>Avg Transaction</h3>
+            <p>₹{{ summary.analytics.average_transaction | default(0) }}</p>
+          </div>
+        </div>
       </div>
 
       <div class="dashboard-grid">
@@ -121,6 +135,12 @@
         <div class="card chart-container">
           <h3>Spending by Category</h3>
           <canvas id="spendingChart"></canvas>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="card chart-container">
+          <h3>Monthly Trend (Last 12 Months)</h3>
+          <canvas id="trendChart"></canvas>
         </div>
 
         <!-- Recent Transactions -->
@@ -148,6 +168,89 @@
           </div>
           <a href="/view_transactions" class="view-all-link">View All Transactions</a>
         </div>
+
+        <!-- Weekly Pattern -->
+        <div class="card insights-card">
+          <h3>Weekly Spending Pattern</h3>
+          <div class="pattern-list">
+            {% set pattern = summary.analytics.weekly_pattern | default({}) %}
+            {% for day, amount in pattern.items() %}
+            <div class="pattern-item">
+              <span class="day-name">{{ day }}</span>
+              <div class="amount-bar">
+                <div class="bar" style="width: {% if pattern | length > 0 %}{{ (amount / (pattern.values() | max)) * 100 }}{% else %}0{% endif %}%"></div>
+              </div>
+              <span class="amount">₹{{ amount }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Category Growth -->
+        <div class="card insights-card">
+          <h3>Category Growth (vs Last Month)</h3>
+          <div class="growth-list">
+            {% set growth = summary.analytics.category_growth | default({}) %}
+            {% if growth %}
+              {% for category, pct in growth.items() %}
+              <div class="growth-item {% if pct > 0 %}increase{% elif pct < 0 %}decrease{% else %}neutral{% endif %}">
+                <span class="category-name">{{ category }}</span>
+                <span class="growth-indicator">
+                  {% if pct > 0 %}
+                    <i class="fas fa-arrow-up"></i> {{ pct }}%
+                  {% elif pct < 0 %}
+                    <i class="fas fa-arrow-down"></i> {{ pct }}%
+                  {% else %}
+                    — Stable
+                  {% endif %}
+                </span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p class="no-data">Insufficient data for comparison</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Highest Spending Day -->
+        <div class="card insights-card">
+          <h3>Spending Insights</h3>
+          <div class="insights-list">
+            <div class="insight-item">
+              <span class="label">Highest Spending Day:</span>
+              {% set highest_day = summary.analytics.highest_spending_day | default({}) %}
+              {% if highest_day %}
+                <span class="value">{{ highest_day.date }} (₹{{ highest_day.amount }})</span>
+              {% else %}
+                <span class="value">No data</span>
+              {% endif %}
+            </div>
+            <div class="insight-item">
+              <span class="label">Spending vs 3-Month Avg:</span>
+              {% set savings = summary.analytics.savings_rate | default({}) %}
+              <span class="value">{{ savings.trend | default('N/A') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anomalies -->
+        {% set anomalies = summary.analytics.anomalies | default([]) %}
+        {% if anomalies %}
+        <div class="card anomalies-card">
+          <h3><i class="fas fa-exclamation-circle"></i> Unusual Spending Detected</h3>
+          <div class="anomalies-list">
+            {% for anomaly in anomalies %}
+            <div class="anomaly-item">
+              <span class="category">{{ anomaly.category }}</span>
+              <span class="details">
+                ↑ {{ anomaly.increase_pct }}% above historical average
+                <br><small>Current: ₹{{ anomaly.current }} | Avg: ₹{{ anomaly.historical_avg }}</small>
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </main>
@@ -155,7 +258,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    // Initialize Chart
+    // Initialize Spending Chart
     const ctx = document.getElementById('spendingChart').getContext('2d');
     const labels = {{ summary.category_labels | tojson }};
     const values = {{ summary.category_values | tojson }};
@@ -179,6 +282,49 @@
           legend: {
             position: 'bottom',
             labels: { color: '#a0a0a0' }
+          }
+        }
+      }
+    });
+
+    // Initialize Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    const trendData = {{ summary.analytics.monthly_trend | tojson }};
+    const trendLabels = Object.keys(trendData);
+    const trendValues = Object.values(trendData);
+
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: trendLabels,
+        datasets: [{
+          label: 'Monthly Spending',
+          data: trendValues,
+          borderColor: '#03dac6',
+          backgroundColor: 'rgba(3, 218, 198, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#03dac6',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: { color: '#a0a0a0' }
+          }
+        },
+        scales: {
+          y: {
+            ticks: { color: '#a0a0a0' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          x: {
+            ticks: { color: '#a0a0a0' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
           }
         }
       }

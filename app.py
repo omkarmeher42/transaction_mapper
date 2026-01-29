@@ -101,13 +101,17 @@ def create_app():
             top_category = "None"
             if category_data:
                 top_category = max(category_data, key=lambda x: x[1])[0]
-                
+            
+            # Get advanced analytics
+            analytics = TransactionServices.get_analytics_data(current_user.id)
+            
             summary = {
                 'total_spent': total_spent,
                 'top_category': top_category,
                 'category_labels': category_labels,
                 'category_values': category_values,
-                'recent_transactions': [tx.to_dict() for tx in recent_transactions]
+                'recent_transactions': [tx.to_dict() for tx in recent_transactions],
+                'analytics': analytics
             }
         except Exception as e:
             print(f"Error gathering summary data: {e}")
@@ -116,7 +120,8 @@ def create_app():
                 'top_category': "None",
                 'category_labels': [],
                 'category_values': [],
-                'recent_transactions': []
+                'recent_transactions': [],
+                'analytics': {}
             }
             
         return render_template('dashboard.html', user=current_user, summary=summary)

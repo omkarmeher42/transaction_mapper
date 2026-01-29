@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spendings - Transaction Mapper</title>
+  <title>Spendings Analysis - Transaction Mapper</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='notifications.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -91,57 +92,286 @@
   {% include 'notifications.html' %}
 
   <!-- Main Content -->
-  <main class="view-transactions-container">
-    <h1>Spendings Analysis</h1>
+  <main class="spendings-container">
+    <!-- Header -->
+    <div class="spendings-header">
+      <h1><i class="fas fa-chart-pie"></i> Spending Analysis</h1>
+      <p>Visual breakdown of your spending patterns and category analysis</p>
+    </div>
 
-    <div class="left-side-container">
-      <div class="month-year-container">
-        <form method="POST" action="{{ url_for('transaction.spendings') }}" id="view-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="month">Month</label>
-              <select id="month" name="month">
-                <option value="" disabled>Select Month</option>
-                {% for month_name in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
-                  <option value="{{ month_name }}" {% if request.form.get('month') == month_name %}selected{% endif %}>{{ month_name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="year">Year</label>
-              <select id="year" name="year">
-                <option value="" disabled>Select Year</option>
-                {% for year in range(2025, 2031) %}
-                  <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
-                {% endfor %}
-              </select>
-            </div>
+    <!-- Filters Section -->
+    <div class="spendings-filters">
+      <form method="POST" action="{{ url_for('transaction.spendings') }}" id="spendings-form" class="spendings-filter-form">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="month">Month</label>
+            <select id="month" name="month">
+              <option value="" disabled>Select Month</option>
+              {% for month_name in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] %}
+                <option value="{{ month_name }}" {% if request.form.get('month') == month_name %}selected{% endif %}>{{ month_name }}</option>
+              {% endfor %}
+            </select>
           </div>
-          <button type="submit" class="btn-primary view-button">
-            <i class="fa fa-eye" aria-hidden="true"></i>
-            <span>View</span>
+          <div class="filter-group">
+            <label for="year">Year</label>
+            <select id="year" name="year">
+              <option value="" disabled>Select Year</option>
+              {% for year in range(2025, 2031) %}
+                <option value="{{ year }}" {% if request.form.get('year') == year|string %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-primary filter-btn">
+            <i class="fas fa-filter"></i> Analyze
           </button>
-        </form>
+        </div>
+      </form>
+    </div>
+
+    {% if total_spendings is not none %}
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon spending-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="summary-content">
+          <h3>Total Spending</h3>
+          <p class="summary-amount">₹{{ total_spendings }}</p>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="summary-icon average-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="summary-content">
+          <h3>Daily Average</h3>
+          <p class="summary-amount">₹{{ (total_spendings / 30) | round(2) }}</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon category-icon">
+          <i class="fas fa-tag"></i>
+        </div>
+        <div class="summary-content">
+          <h3>Top Category</h3>
+          <p class="summary-amount">{{ top_category or 'N/A' }}</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon count-icon">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div class="summary-content">
+          <h3>Total Transactions</h3>
+          <p class="summary-amount">{{ transaction_count }}</p>
+        </div>
       </div>
     </div>
 
-    <div class="view-container">
-      {% if total_spendings is not none %}
-      <div class="total-spendings-card">
-        <h2>Total Spendings</h2>
-        <p class="amount">₹{{ total_spendings }}</p>
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <!-- Pie Chart -->
+      <div class="chart-container pie-chart-container">
+        <h2>Category Distribution</h2>
+        <canvas id="categoryPieChart"></canvas>
+      </div>
+
+      <!-- Bar Chart -->
+      <div class="chart-container bar-chart-container">
+        <h2>Category Comparison</h2>
+        <canvas id="categoryBarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- KEY INSIGHTS SECTION -->
+    <div class="insights-section">
+      <h2 class="insights-title"><i class="fas fa-lightbulb"></i> Key Insights & Analysis</h2>
+      
+      <!-- Recommendations & Alerts -->
+      {% if insights.recommendations %}
+      <div class="insights-grid">
+        <div class="insights-card alerts-card">
+          <h3><i class="fas fa-bell"></i> Smart Alerts</h3>
+          <div class="alerts-container">
+            {% for recommendation in insights.recommendations %}
+            <div class="alert alert-{{ recommendation.type }}">
+              <i class="fas fa-{% if recommendation.type == 'alert' %}exclamation-circle{% elif recommendation.type == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+              <span>{{ recommendation.text }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
       {% endif %}
-      
-      <div class="spending-cards">
-        {% for category, amount in spendings_data.items() %}
-        <div class="spending-card">
-          <h3>{{ category }}</h3>
-          <p class="amount">₹{{ amount }}</p>
+
+      <!-- Month Comparison -->
+      {% if insights.prev_month_spending %}
+      <div class="insights-grid">
+        <div class="insights-card comparison-card">
+          <h3><i class="fas fa-chart-line"></i> Month Comparison</h3>
+          <div class="comparison-content">
+            <div class="comparison-metric">
+              <label>Previous Month</label>
+              <span class="amount">₹{{ insights.prev_month_spending }}</span>
+            </div>
+            <div class="comparison-indicator">
+              <i class="fas fa-arrow-{% if insights.spending_trend == 'up' %}up{% else %}down{% endif %} trend-{{ insights.spending_trend }}"></i>
+            </div>
+            <div class="comparison-metric">
+              <label>This Month</label>
+              <span class="amount">₹{{ total_spendings }}</span>
+            </div>
+          </div>
+          <div class="comparison-summary">
+            <span class="change-{% if insights.spending_trend == 'up' %}up{% else %}down{% endif %}">
+              {% if insights.spending_trend == 'up' %}↑{% else %}↓{% endif %}
+              {{ insights.spending_change_percent|abs }}% 
+              ({% if insights.spending_trend == 'up' %}+{% endif %}₹{{ insights.spending_change|abs }})
+            </span>
+          </div>
         </div>
-        {% endfor %}
+
+        <!-- Budget Utilization -->
+        <div class="insights-card budget-card">
+          <h3><i class="fas fa-wallet"></i> Budget Status</h3>
+          <div class="budget-stats">
+            <div class="budget-metric">
+              <label>Total Budget</label>
+              <span>₹{{ insights.total_budget }}</span>
+            </div>
+            <div class="budget-metric">
+              <label>Spent</label>
+              <span>₹{{ total_spendings }}</span>
+            </div>
+            <div class="budget-metric">
+              <label>Utilization</label>
+              <span class="utilization-{% if insights.budget_utilization > 100 %}danger{% elif insights.budget_utilization > 80 %}warning{% else %}safe{% endif %}">
+                {{ insights.budget_utilization }}%
+              </span>
+            </div>
+          </div>
+          <div class="budget-bar">
+            <div class="budget-fill" style="width: min({{ insights.budget_utilization }}%, 100%)"></div>
+          </div>
+        </div>
       </div>
+      {% endif %}
+
+      <!-- Category Changes & Top/Bottom Categories -->
+      {% if insights.top_3_categories or insights.category_changes %}
+      <div class="insights-grid">
+        <!-- Top Spending Categories -->
+        <div class="insights-card categories-card">
+          <h3><i class="fas fa-crown"></i> Top Spending Categories</h3>
+          <div class="category-list">
+            {% for category, amount in insights.top_3_categories %}
+            <div class="category-item">
+              <span class="category-name">{{ category }}</span>
+              <span class="category-value">₹{{ amount|round(2) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Category Changes -->
+        <div class="insights-card changes-card">
+          <h3><i class="fas fa-exchange-alt"></i> Category Changes (vs Previous Month)</h3>
+          <div class="changes-list">
+            {% for change in insights.category_changes %}
+            <div class="change-item change-{{ change.trend }}">
+              <div class="change-header">
+                <span class="category-name">{{ change.category }}</span>
+                <span class="change-badge {% if change.trend == 'up' %}trend-up{% else %}trend-down{% endif %}">
+                  {% if change.trend == 'up' %}<i class="fas fa-arrow-up"></i>{% else %}<i class="fas fa-arrow-down"></i>{% endif %}
+                  {{ change.change_percent|abs }}%
+                </span>
+              </div>
+              <div class="change-details">
+                <small>₹{{ change.previous }} → ₹{{ change.current }}</small>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Budget Alerts (if any) -->
+      {% if insights.budget_alerts %}
+      <div class="insights-grid">
+        <div class="insights-card full-width budget-alerts-card">
+          <h3><i class="fas fa-exclamation-triangle"></i> Budget Overruns</h3>
+          <div class="overrun-items">
+            {% for alert in insights.budget_alerts %}
+            <div class="overrun-item">
+              <div class="overrun-header">
+                <span class="category-name">{{ alert.category }}</span>
+                <span class="overrun-amount">+₹{{ alert.overspend }}</span>
+              </div>
+              <div class="overrun-progress">
+                <div class="overrun-bar">
+                  <div class="overrun-fill" style="width: min({{ (alert.spent / alert.limit) * 100 }}%, 150%)"></div>
+                </div>
+                <small>{{ alert.spent|round(2) }} of ₹{{ alert.limit }} ({{ alert.overspend_percent }}% over)</small>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Spending Pattern Insights -->
+      {% if insights.highest_spending_day %}
+      <div class="insights-grid">
+        <div class="insights-card">
+          <h3><i class="fas fa-calendar-day"></i> Daily Pattern</h3>
+          <div class="pattern-content">
+            <div class="pattern-item highest">
+              <label>Highest Spending Day</label>
+              <span>Day {{ insights.highest_spending_day[0] }}<br>₹{{ insights.highest_spending_day[1] }}</span>
+            </div>
+            <div class="pattern-item lowest">
+              <label>Lowest Spending Day</label>
+              <span>Day {{ insights.lowest_spending_day[0] }}<br>₹{{ insights.lowest_spending_day[1] }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Category Cards Grid -->
+    <div class="spending-categories-grid">
+      <h2 class="grid-title">Category Breakdown</h2>
+      {% for category, amount in spendings_data.items() %}
+      <div class="spending-card">
+        <div class="card-header">
+          <h3 class="category-name">{{ category }}</h3>
+          <span class="category-amount">₹{{ amount }}</span>
+        </div>
+        <div class="card-body">
+          <div class="percentage">
+            {{ ((amount / total_spendings * 100) | round(1)) }}% of total
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width: {{ ((amount / total_spendings * 100) | round(1)) }}%"></div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-spendings-state">
+      <i class="fas fa-inbox"></i>
+      <h3>No Data Available</h3>
+      <p>Select a month and year to view your spending analysis</p>
+    </div>
+    {% endif %}
   </main>
 
   <script src="{{ url_for('static', filename='main.js') }}"></script>
@@ -149,7 +379,94 @@
     // Custom tab highlighting for Spendings
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('spendings-tab').classList.add('active');
+        
+        // Initialize charts only if data exists
+        const pieChartCanvas = document.getElementById('categoryPieChart');
+        if (pieChartCanvas) {
+          initializeCharts(pieChartCanvas);
+        }
     });
+
+    function initializeCharts(pieChartCanvas) {
+      const categories = {{ spendings_data.keys() | list | tojson }};
+      const amounts = {{ spendings_data.values() | list | tojson }};
+      
+      // Color palette for categories
+      const colors = [
+        '#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa07a', '#98d8c8',
+        '#f7dc6f', '#bb86fc', '#ff85c0', '#a1887f', '#c0a080'
+      ];
+
+      // Pie Chart
+      const pieCtx = pieChartCanvas.getContext('2d');
+      new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: categories,
+          datasets: [{
+            data: amounts,
+            backgroundColor: colors.slice(0, categories.length),
+            borderColor: 'rgba(30, 30, 46, 0.6)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#a0a0a0',
+                font: { size: 12, weight: '600' },
+                padding: 15
+              }
+            }
+          }
+        }
+      });
+
+      // Bar Chart
+      const barCtx = document.getElementById('categoryBarChart').getContext('2d');
+      new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: categories,
+          datasets: [{
+            label: 'Spending (₹)',
+            data: amounts,
+            backgroundColor: colors.slice(0, categories.length),
+            borderColor: 'rgba(187, 134, 252, 0.5)',
+            borderWidth: 1,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          indexAxis: 'y',
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#a0a0a0',
+                font: { size: 12, weight: '600' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#a0a0a0' },
+              grid: { color: 'rgba(187, 134, 252, 0.1)' }
+            },
+            y: {
+              ticks: { color: '#a0a0a0' },
+              grid: { color: 'rgba(187, 134, 252, 0.1)' }
+            }
+          }
+        }
+      });
+    }
 
     function handleUserIconClick() {
       window.location.href = '{{ url_for("user.user_details") }}';

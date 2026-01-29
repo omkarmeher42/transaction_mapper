@@ -50,6 +50,18 @@ def quick_map():
             db.session.commit()
             flash('Quick card created!', 'success')
             return redirect(url_for('quick.quick_map'))
+        
+        elif action == 'update':
+            card_id = request.form.get('card_id')
+            card = QuickCard.query.get(card_id)
+            if card and card.user_id == current_user.id:
+                card.title = request.form.get('title')
+                card.amount = float(request.form.get('amount'))
+                card.category = request.form.get('category')
+                card.payment_method = request.form.get('payment_method')
+                db.session.commit()
+                flash('Quick card updated!', 'success')
+            return redirect(url_for('quick.quick_map'))
 
     # GET request
     cards = QuickCard.query.filter_by(user_id=current_user.id).all()

@@ -108,27 +108,31 @@
         <!-- List Recurring -->
         <div class="card">
           <h3>Active Recurring Expenses</h3>
-          <div class="recurring-grid">
+          <div class="recurring-list">
             {% for tx in recurring_transactions %}
-            <div class="card" style="background: rgba(255,255,255,0.05);">
-              <div class="budget-header">
-                <div>
-                  <h4 style="margin:0;">{{ tx.title }}</h4>
-                  <small style="color: #666;">{{ tx.category }}</small>
-                </div>
-                <span style="color: #bb86fc; font-weight: 600;">₹{{ tx.amount }}</span>
+            <div class="recurring-list-item">
+              <div class="recurring-info">
+                <div class="recurring-title">{{ tx.title }}</div>
+                <div class="recurring-subtitle">{{ tx.category }} • {{ tx.payment_method }}</div>
               </div>
-              <div style="margin: 10px 0;">
+              <div class="recurring-amount">
+                ₹{{ tx.amount }}
+              </div>
+              <div class="recurring-actions">
                 <span class="day-badge">Day {{ tx.day_of_month }}</span>
-                <span style="font-size: 0.8rem; color: #a0a0a0; margin-left: 10px;">via {{ tx.payment_method }}</span>
+                <form action="{{ url_for('budget.delete_recurring', id=tx.id) }}" method="POST" style="margin: 0;">
+                  <button type="submit" class="btn-icon delete" title="Remove">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
               </div>
-              <form action="{{ url_for('budget.delete_recurring', id=tx.id) }}" method="POST" style="text-align: right;">
-                <button type="submit" style="color: #cf6679; background: none; border: none; cursor: pointer; font-size: 0.8rem;">
-                  <i class="fas fa-trash"></i> Remove
-                </button>
-              </form>
             </div>
             {% endfor %}
+            {% if recurring_transactions|length == 0 %}
+            <div style="text-align: center; color: #a0a0a0; padding: 20px;">
+              No recurring expenses added yet.
+            </div>
+            {% endif %}
           </div>
         </div>
       </div>
